@@ -10,6 +10,7 @@ library(tidyr)
 library(lubridate)
 library(cowplot)
 library(stringr)
+library(R2jags)
 
 # 2. Map of conterminous US ----
 us_outline <- getData("GADM", country = "USA", level = 1)
@@ -46,17 +47,20 @@ eBird_xy <- SpatialPointsDataFrame(cbind(eBird_dat$LONGITUDE, eBird_dat$LATITUDE
 eBird_dat$cell <- raster::extract(ann_temp, eBird_xy, cellnumbers = TRUE, df = TRUE)$cells
 
 eBird_dat <- merge(eBird_dat, cell_xy)
-
-# 5. Detection/non-detection history ----
-sampling_replicates <- distinct(eBird_dat, YEAR, DAY, cell) %>%
-  select(YEAR, DAY, cell) %>% # here I can adjust the code to include sampling co-variates
-  mutate(obs_date = ymd(as.Date(DAY, origin = paste0(YEAR, "-01-01"), value = 1)),
+eBird_dat <- mutate(eBird_dat, obs_date = ymd(as.Date(DAY, origin = paste0(YEAR, "-01-01"), value = 1)),
          mon_year = paste(year(obs_date), 
                           ifelse(nchar(month(obs_date))==1, paste0("0",month(obs_date)), month(obs_date)), 
-                          sep="_")) %>%
+                          sep="_")) 
+
+# 5. Detection/non-detection history ----
+sampling_replicates <- distinct(eBird_dat, mon_year, DAY, cell) %>%
+  select(YEAR, DAY, cell) %>% # here I can adjust the code to include sampling co-variates
   group_by(cell, mon_year) %>% 
   arrange(obs_date) %>%
   mutate(value = 1, replicate=cumsum(value))
+
+sampling_replicates_tot <- group_by(sampling_replicates, cell, mon_year) %>%
+  summarise(reps=max(replicate))
 
 all_reps <- expand.grid(mon_year = unique(sampling_replicates$mon_year), replicate = 1:max(sampling_replicates$replicate))
 
@@ -85,20 +89,37 @@ sampling_history[sampling_history==-1] <- NA
 colnames(sampling_history) <- colnames(sampling_replicates_wide[2:ncol(sampling_replicates_wide)])
 sampling_history <- data.frame(eBird_wide[1:2], sampling_history)
 
-# 6. Split by species
+# 6. Split by species ----
 sampling_history <- split(sampling_history, sampling_history$SCI_NAME)
 rufus <- sampling_history[["Selasphorus rufus"]][-c(1,2)]
-rufus <- rufus[1:20,]
-# 7. Occupancy model
-library(unmarked)
-TP <- length(unique(all_reps$mon_year))
-year <- matrix(unique(all_reps$mon_year), nrow(rufus), TP, byrow=TRUE)
-simUMF <- unmarkedMultFrame( y = rufus, yearlySiteCovs = list(year = year), numPrimary=TP) 
-summary(simUMF) 
 
-m0 <- colext(psiformula = ~1, gammaformula = ~1, epsilonformula = ~1, pformula = ~1, data = simUMF, method = "BFGS")
+# 7. Occupancy model ----
+nsite <- nrow(rufus)
+nrep <- max(sampling_replicates$replicate)
+nyear <- length(unique(sampling_replicates$mon_year)) # called year, but really it's sampling periods, could be a day, could be a month etc.
+y <- array(NA, dim=c(nsites, nreps, nperiods))
 
-# 7. Create plots to show biases ----
+# 2D to 3D for input to jags
+for(i in 1:nperiods) {
+  y[, , i] <- as.matrix(rufus[,(nreps*(i-1)+1):(i*nreps)])
+}
+
+# number of detections for each time period
+tmp <- apply(y, c(1,3), max, na.rm=TRUE)
+tmp[tmp == "-Inf"] <- NA
+apply(tmp, 2, sum, na.rm=TRUE)
+
+dat <- list(y = y, nsite = nsite, nrep = nrep, nyear = nyear)
+inits <- function() {list(z = apply(y, c(1, 3), max))}
+params <- c("psi", "phi", "gamma", "p", "n.occ", "growthr", "turnover")
+ni <- 5000
+nt <- 4
+nb <- 1000
+nc <- 3
+
+out <- jags(dat, inits, params, "dynocc.bugs", n.chains=nc, n.thin = nt, n.burnin = nb, n.iter = ni)
+
+# 8. Create plots to show biases ----
 eBird_summary <- group_by(eBird_dat, x, y) %>%
   summarise(nobs=n()) 
 
