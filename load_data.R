@@ -53,8 +53,8 @@ eBird_dat <- mutate(eBird_dat, obs_date = ymd(as.Date(DAY, origin = paste0(YEAR,
                           sep="_")) 
 
 # 5. Detection/non-detection history ----
-sampling_replicates <- distinct(eBird_dat, mon_year, DAY, cell) %>%
-  select(YEAR, DAY, cell) %>% # here I can adjust the code to include sampling co-variates
+sampling_replicates <- distinct(eBird_dat, obs_date, cell) %>%
+  select(obs_date, mon_year, cell) %>% # here I can adjust the code to include sampling co-variates
   group_by(cell, mon_year) %>% 
   arrange(obs_date) %>%
   mutate(value = 1, replicate=cumsum(value))
@@ -97,11 +97,11 @@ rufus <- sampling_history[["Selasphorus rufus"]][-c(1,2)]
 nsite <- nrow(rufus)
 nrep <- max(sampling_replicates$replicate)
 nyear <- length(unique(sampling_replicates$mon_year)) # called year, but really it's sampling periods, could be a day, could be a month etc.
-y <- array(NA, dim=c(nsites, nreps, nperiods))
+y <- array(NA, dim=c(nsite, nrep, nyear))
 
 # 2D to 3D for input to jags
-for(i in 1:nperiods) {
-  y[, , i] <- as.matrix(rufus[,(nreps*(i-1)+1):(i*nreps)])
+for(i in 1:nyear) {
+  y[, , i] <- as.matrix(rufus[,(nrep*(i-1)+1):(i*nrep)])
 }
 
 # number of detections for each time period
@@ -110,7 +110,7 @@ tmp[tmp == "-Inf"] <- NA
 apply(tmp, 2, sum, na.rm=TRUE)
 
 dat <- list(y = y, nsite = nsite, nrep = nrep, nyear = nyear)
-inits <- function() {list(z = apply(y, c(1, 3), max))}
+inits <- function() {list(z = apply(y, c(1, 3), max, na.rm=TRUE))}
 params <- c("psi", "phi", "gamma", "p", "n.occ", "growthr", "turnover")
 ni <- 5000
 nt <- 4
