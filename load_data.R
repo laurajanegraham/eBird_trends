@@ -118,7 +118,7 @@ for(i in 1:nyear) {
 # number of detections for each time period
 tmp <- apply(y, c(1,3), max, na.rm=TRUE)
 tmp[tmp == "-Inf"] <- NA
-apply(tmp, 2, sum, na.rm=TRUE)
+obs <- data.frame(year = sort(unique(eBird_dat$YEAR)), obs = apply(tmp, 2, sum, na.rm=TRUE))
 
 dat <- list(y = y, nsite = nsite, nrep = nrep, nyear = nyear)
 inits <- function() {
@@ -135,7 +135,26 @@ nc <- 3
 
 out <- jags(dat, inits, params, "dynocc.jags", n.chains=nc, n.thin = nt, n.burnin = nb, n.iter = ni)
 
-# 8. Create plots to show biases ----
+# 8. Plot the output of the occupancy model ----
+mod_dat <- data.frame(out$BUGSoutput$summary[,c("mean", "2.5%", "97.5%")])
+occ_dat <- subset(mod_dat, str_detect(rownames(mod_dat), "n.occ"))
+occ_dat$year <- sort(unique(eBird_dat$YEAR))
+occ_dat <- merge(occ_dat, obs)
+
+occ_plot <- ggplot(occ_dat, aes(x = year)) + 
+  geom_point(aes(y = mean, colour="Predicted")) + 
+  geom_errorbar(aes(ymin=X2.5., ymax=X97.5.), width=0.1) +
+  geom_point(data = obs, aes(x = year, y = obs, colour = "Observed")) +
+  xlab("Year") + ylab(expression("No. cells occupied "%+-%" 95% CI")) + 
+  scale_color_manual(name = "", values = c("red", "black"))
+  
+save_plot("occ_plot.png", occ_plot, base_width = 8)
+
+ggplot(obs, aes(x = year, y = obs)) + 
+  geom_point()
+
+
+# 9. Create plots to show biases ----
 eBird_summary <- group_by(eBird_dat, x, y) %>%
   summarise(nobs=n()) 
 
@@ -168,7 +187,7 @@ sp_plots <- lapply(shps, function(x) {
   sp_plot <- ggplot(NULL, aes(x, y)) +
     geom_polygon(data = nc_america, aes(group = group), fill = "lightgrey", color = "lightgrey") +
     geom_raster(data = dat, aes(fill = nobs)) +
-    geom_polygon(data = shp, aes(group = group), fill = NA, color = "black") +
+    geom_polygon(data = shp, aes(group = group), fill = NA, color = "yellow") +
     coord_equal() +
     scale_fill_gradient(name="Obs", low = "blue", high = "red") +
     xlab("") + ylab("") + xlim(-180, -50) + ggtitle(species) +
