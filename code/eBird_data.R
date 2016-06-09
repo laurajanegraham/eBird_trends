@@ -9,7 +9,7 @@ library(tidyr)
 # 2. Create tables in eBird_data SQL database ----
 # set up connection
 drv <- dbDriver("PostgreSQL")
-con <- dbConnect(drv, dbname="ebird_data", host="localhost", port="5432", user="postgres", password="pavement")
+con <- dbConnect(drv, dbname="ebird_data", host="localhost", port="5432", user="postgres", password="password123.")
 
 # drop old versions
 dbGetQuery(con, "DROP TABLE ebird_checklist_species")
