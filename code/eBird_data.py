@@ -116,34 +116,37 @@ for f in files:
     # load the file
         checklist = f + r'\checklists.csv'
         covariate = f + r'\extended-covariates.csv'
-        
-        print("Loading data for " + f)
-        checklist_dat = pd.read_csv(checklist, na_values = ['?'])
-        covariate_dat = pd.read_csv(covariate, na_values = ['?', '-9999', '-9999.0000'])
 
-        print("Manipulate sampling covariates for " + f)
-        info = checklist_dat.ix[:,0:19]
-        info = info.merge(covariate_dat)
-        info.to_csv(r'temp_info.csv', header = None, index = None, na_rep='NaN')
-        del covariate_dat
-        del info
+        print("Loading data for " + f)
+        # covariate file is narrow enough to read in all at once        
+        covariate_dat = pd.read_csv(covariate, na_values = ['?', '-9999', '-9999.0000'])
         
-        print("Manipulating species presences for " + f)
-        sp_pres = checklist_dat[np.r_[0, 19:len(checklist_dat.columns)]] 
-        del checklist_dat
-        sp_pres = pd.melt(sp_pres, id_vars = ['SAMPLING_EVENT_ID'], var_name = 'species', value_name = 'pres' )
-        sp_pres = sp_pres[sp_pres['pres'] != 0]
-        sp_pres = sp_pres[['SAMPLING_EVENT_ID', 'species']]
-        sp_pres.to_csv(r'temp_sp.csv', header = None, index = None)
-        del sp_pres
+        # read in the checklist file 1000 rows at a time
+        for checklist_dat in pd.read_csv(checklist, na_values = ['?'], chunksize = 1000):
         
-        print("Loading species presences for " + f + " into SQL database")
-        sp_sql = """COPY ebird_checklist_species FROM 'D:\\eBird_trends\\data\\erd_western_hemisphere_data_grouped_by_year_v5.0\\temp_sp.csv' WITH DELIMITER AS ',';"""
-        cur.execute(sp_sql)
-        print("Loading sampling covariates for " + f + " into SQL database")
-        info_sql = """COPY ebird_checklist_info FROM 'D:\\eBird_trends\\data\\erd_western_hemisphere_data_grouped_by_year_v5.0\\temp_info.csv' WITH DELIMITER AS ',';"""
-        cur.execute(info_sql)
-                
+            print("Manipulate sampling covariates for " + f)
+            info = checklist_dat.ix[:,0:19]
+            info = info.merge(covariate_dat)
+            info.to_csv(r'temp_info.csv', header = None, index = None, na_rep='NaN')
+            del covariate_dat
+            del info
+            
+            print("Manipulating species presences for " + f)
+            sp_pres = checklist_dat[np.r_[0, 19:len(checklist_dat.columns)]] 
+            del checklist_dat
+            sp_pres = pd.melt(sp_pres, id_vars = ['SAMPLING_EVENT_ID'], var_name = 'species', value_name = 'pres' )
+            sp_pres = sp_pres[sp_pres['pres'] != 0]
+            sp_pres = sp_pres[['SAMPLING_EVENT_ID', 'species']]
+            sp_pres.to_csv(r'temp_sp.csv', header = None, index = None)
+            del sp_pres
+            
+            print("Loading species presences for " + f + " into SQL database")
+            sp_sql = """COPY ebird_checklist_species FROM 'D:\\eBird_trends\\data\\erd_western_hemisphere_data_grouped_by_year_v5.0\\temp_sp.csv' WITH DELIMITER AS ',';"""
+            cur.execute(sp_sql)
+            print("Loading sampling covariates for " + f + " into SQL database")
+            info_sql = """COPY ebird_checklist_info FROM 'D:\\eBird_trends\\data\\erd_western_hemisphere_data_grouped_by_year_v5.0\\temp_info.csv' WITH DELIMITER AS ',';"""
+            cur.execute(info_sql)
+                    
 print("Creating foreign key constraint")
 cur.execute("""ALTER TABLE ebird_checlist_species ADD CONSTRAINT spfk (sampling_event_id) REFERENCES ebird_checklist_info (sampling_event_id) MATCH FULL;""")
 con.commit()
