@@ -9,8 +9,6 @@ import pandas as pd
 import numpy as np
 import os
 import psycopg2 as psql
-from sqlalchemy import create_engine
-
 
 # list the directories
 os.chdir(r'D:\eBird_trends\data\erd_western_hemisphere_data_grouped_by_year_v5.0')
@@ -122,13 +120,12 @@ for f in files:
         covariate_dat = pd.read_csv(covariate, na_values = ['?', '-9999', '-9999.0000'])
         
         # read in the checklist file 1000 rows at a time
-        for checklist_dat in pd.read_csv(checklist, na_values = ['?'], chunksize = 1000):
+        for checklist_dat in pd.read_csv(checklist, na_values = ['?'], chunksize = 10000):
         
-            print("Manipulate sampling covariates for " + f)
+            print("Manipulating sampling covariates for " + f)
             info = checklist_dat.ix[:,0:19]
             info = info.merge(covariate_dat)
             info.to_csv(r'temp_info.csv', header = None, index = None, na_rep='NaN')
-            del covariate_dat
             del info
             
             print("Manipulating species presences for " + f)
@@ -146,9 +143,8 @@ for f in files:
             print("Loading sampling covariates for " + f + " into SQL database")
             info_sql = """COPY ebird_checklist_info FROM 'D:\\eBird_trends\\data\\erd_western_hemisphere_data_grouped_by_year_v5.0\\temp_info.csv' WITH DELIMITER AS ',';"""
             cur.execute(info_sql)
-                    
-print("Creating foreign key constraint")
-cur.execute("""ALTER TABLE ebird_checlist_species ADD CONSTRAINT spfk (sampling_event_id) REFERENCES ebird_checklist_info (sampling_event_id) MATCH FULL;""")
-con.commit()
+
+        del covariate_dat
+        con.commit()
 cur.close()
 con.close()
