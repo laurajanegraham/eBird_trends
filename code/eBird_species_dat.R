@@ -26,15 +26,14 @@ write.csv(fam_complete, file = "data/species_family_lookup.csv")
 # NB taxize did not find all families - have manually updated the field for 319 species
 
 species <- read.csv("data/species_family_lookup.csv", stringsAsFactors = FALSE) # read in the edited file
-species <- data.frame(id = species$X, species = species$species, family = species$family)
+species <- subset(species, select = c(species, family))
 
 # input species info table into the database
 dbGetQuery(con, "CREATE TABLE ebird_species_info (
-           id int PRIMARY KEY,
-           species varchar(50),
+           species varchar(50) PRIMARY KEY,
            family varchar(50)
-) ")
+) ") 
 
-dbWriteTable(con, "ebird_species_info", value = species, append = TRUE, row.names = FALSE)
+dbWriteTable(con, "ebird_species_info", value = species, append = TRUE, row.names = FALSE) 
 
 dbDisconnect(con)
