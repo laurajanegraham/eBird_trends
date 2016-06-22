@@ -27,7 +27,7 @@ write.csv(fam_complete, file = "data/species_family_lookup.csv")
 
 species <- read.csv("data/species_family_lookup.csv", stringsAsFactors = FALSE) # read in the edited file
 species <- subset(species, select = c(species, family))
-
+species$species <- gsub(" ", "_", species$species)
 # input species info table into the database
 dbGetQuery(con, "CREATE TABLE ebird_species_info (
            species varchar(50) PRIMARY KEY,
