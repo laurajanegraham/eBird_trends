@@ -6,9 +6,9 @@ Created on Tue Jun 21 11:56:11 2016
 """
 
 import pandas as pd
+import numpy as np
 import datetime
 from sqlalchemy import create_engine
-from itertools import product
 
 
 # connect to database
@@ -38,9 +38,19 @@ humdat = pd.read_sql_query("""SELECT sampling_event_id,
 # convert the observation date to full date
 humdat['obs_date'] = humdat.apply(lambda x: datetime.datetime.strptime(str(x['year']) + ' ' + str(x['day']), '%Y %j').strftime('%Y-%m-%d'), axis = 1)
 humdat['mon_year'] = humdat.obs_date.str.slice(0, 7)
+humdat['value'] = 1
 
 # get the unique sampling replicates 
 sampling_reps = humdat[['obs_date', 'mon_year', 'loc_id']].drop_duplicates().sort_values(['loc_id', 'obs_date'])
-sampling_reps['replicate'] = sampling_reps.groupby(['loc_id', 'mon_year']).cumcount()
+max_rep = max(sampling_reps.groupby(['loc_id', 'mon_year']).cumcount())
 
-all_reps = pd.DataFrame(list(product(sampling_reps['mon_year'], list(range(max(sampling_reps['replicate']) + 1)))), columns = ['mon_year', 'replicate'])
+species = pd.DataFrame(humdat.species.unique(), columns = ['species'])
+# try subsetting by month and creating a dataframe per month
+humdat_month = humdat.query("mon_year == '2013-09' & loc_id == 'L2237076'")
+humdat_month['replicate'] = humdat_month.sort_values(['species', 'loc_id', 'obs_date']).groupby(['species', 'loc_id']).cumcount()
+humdat_month_wide = humdat_month.pivot(index = 'species',columns = 'replicate', values = 'value').reset_index()
+humdat_month_wide = species.merge(humdat_month_wide,how = "left").fillna(value = 0)
+extra_cols = list(range(humdat_month_wide.columns[humdat_month_wide.shape[1]-1]+1, max_rep+1))
+extra_cols = pd.DataFrame(index = humdat_month_wide.index, columns = extra_cols)
+humdat_month_wide = pd.concat([humdat_month_wide, extra_cols], axis = 1)
+
