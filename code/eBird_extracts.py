@@ -78,12 +78,12 @@ r("save(locations_full, file='D:/eBird_trends/locations_full.rda')")
 
 
 # get the maximum number of unique sampling replicates 
-max_rep = humdat[['obs_date', 'mon_year', 'loc_id']].drop_duplicates().sort_values(['loc_id', 'obs_date'])
-max_rep = max(max_rep.groupby(['loc_id', 'mon_year']).size())
+max_rep = humdat_obs[['obs_date', 'year', 'loc_id']].drop_duplicates().sort_values(['loc_id', 'obs_date'])
+max_rep = max(max_rep.groupby(['loc_id', 'year']).size())
 
 # need to do some kind of row sums to work out which rows have many observations. Also potentially a how many non-zero coluns type thing
 # get the looping levels
-mon_year = humdat_obs.mon_year.unique()
+year = humdat_obs.year.unique()
 loc_id = humdat_obs.loc_id.unique()
 # and the unique species
 species = pd.DataFrame(humdat_obs.species.unique(), columns = ['species'])
@@ -92,7 +92,7 @@ missing_species = species_full[~species_full.species.isin(species.species)]
 
 # try subsetting by month and creating a dataframe per month
 def data_juggle(in_dat, timestep, location, species, max_rep):
-    dat_sub = in_dat[(in_dat.mon_year == timestep) & (in_dat.loc_id == location)]
+    dat_sub = in_dat[(in_dat.year == timestep) & (in_dat.loc_id == location)]
     dat_sub = dat_sub[['species', 'obs_date', 'value']].drop_duplicates()
     # get lookup for date/time and replicate
     if dat_sub.shape[0]==0:
@@ -108,13 +108,14 @@ def data_juggle(in_dat, timestep, location, species, max_rep):
         extra_cols = list(range(dat_species.columns[dat_species.shape[1]-1]+1, max_rep+1))
         extra_cols = pd.DataFrame(index = dat_species.index, columns = extra_cols)
         out_dat = pd.concat([dat_species, extra_cols], axis = 1).drop(['species'], axis = 1).as_matrix()
+        print( str(timestep) + ' ' + str(location) + ' done...')
     return out_dat;
     
-wide_dat = np.zeros((mon_year.size, loc_id.size, species.size, max_rep))
+wide_dat = np.zeros((year.size, loc_id.size, species.size, max_rep))
 
-for i in range(0, len(mon_year)):
+for i in range(0, len(year)):
     for j in range(0, len(loc_id)):
-        wide_dat[i][j] = data_juggle(humdat_obs, mon_year[i], loc_id[j], species, max_rep)
+        wide_dat[i][j] = data_juggle(humdat_obs, year[i], loc_id[j], species, max_rep)
 
 
 
