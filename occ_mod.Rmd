@@ -1,0 +1,25 @@
+---
+title: "eBird Occupancy Model Testing"
+author: "Laura Graham"
+date: "July 21, 2016"
+output: pdf_document
+---
+```{r setup}
+library(R2jags)
+load("locations_sml.rda")
+load("locations_full.rda")
+```
+
+# Data preparation
+Currently working with the data for hummingbirds from Colorado. The dataset has been generated in Python and I have filtered it such that only locations which have greater than 3 observations in at least one month are included. This reduces the number of locations from `r nrow(locations_full)` to `r nrow(locations_sml)`. 
+
+The final data output from Python is a 4-dimensional array where the dimensions are: Year, Location, Species and Replicate. 
+
+```{r load_data}
+load("data/hummingbirds_colorado.rda")
+
+# size of array
+dim(wide_dat)
+```
+
+
