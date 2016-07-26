@@ -2,9 +2,11 @@
 title: "eBird Occupancy Model Testing"
 author: "Laura Graham"
 date: "July 21, 2016"
-output: pdf_document
+output: 
+  pdf_document:
+    number_sections: true
 ---
-```{r setup}
+```{r setup, message=FALSE, include=FALSE}
 library(R2jags)
 load("locations_sml.rda")
 load("locations_full.rda")
@@ -22,4 +24,5 @@ load("data/hummingbirds_colorado.rda")
 dim(wide_dat)
 ```
 
-
+# Initial models
+## Basic dynamic occupancy model (no covariates)
