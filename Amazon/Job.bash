@@ -16,10 +16,10 @@ sudo apt-get install git-lfs
 cd /home
 echo 'Host github.com
   StrictHostKeyChecking no' > ~/.ssh/config
-git clone git@github.com:laurajanegraham/ec2test.git
+git clone git@github.com:laurajanegraham/eBird_trends.git
 
 # checkout new branch named after the instance id
-cd ec2test
+cd eBird_trends
 iid=$(ec2metadata --instance-id)
 git checkout -b $iid
 
