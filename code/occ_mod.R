@@ -1,3 +1,4 @@
+install.packages("R2jags")
 library(R2jags)
 load("locations_sml.rda")
 load("locations_full.rda")
