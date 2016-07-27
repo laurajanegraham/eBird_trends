@@ -24,7 +24,7 @@ iid=$(ec2metadata --instance-id)
 git checkout -b $iid
 
 # run the job script
-Rscript --no-save --no-restore --verbose occ_mod.R &> run.txt
+Rscript --no-save --no-restore --verbose code/occ_mod.R &> run.txt
 
 # push commits to local branch and push to github
 git add --all
