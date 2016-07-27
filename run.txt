@@ -1,0 +1,5 @@
+running
+  '/usr/lib/R/bin/R --slave --no-restore --no-save --no-restore --file=code/occ_mod.R'
+
+Error in library(R2jags) : there is no package called ‘R2jags’
+Execution halted
