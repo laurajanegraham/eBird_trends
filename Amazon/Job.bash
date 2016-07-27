@@ -4,9 +4,9 @@
 curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
 
 # install pandoc
-curl -s https://github.com/jgm/pandoc/releases/tag/1.17.2/pandoc-1.17.2-1-amd64.deb
-sudo dpkg pandoc-1.17.2-1-amd64.deb
-sudo apt-get install -f
+#curl -s https://github.com/jgm/pandoc/releases/tag/1.17.2/pandoc-1.17.2-1-amd64.deb
+#sudo dpkg pandoc-1.17.2-1-amd64.deb
+#sudo apt-get install -f
 
 # install git-lfs
 cd /usr/bin
@@ -24,7 +24,7 @@ iid=$(ec2metadata --instance-id)
 git checkout -b $iid
 
 # run the job script
-Rscript -e "rmarkdown::render('occ_mod.Rmd')" &> run.txt
+Rscript --no-save --no-restore --verbose occ_mod.R &> run.txt
 
 # push commits to local branch and push to github
 git add --all
