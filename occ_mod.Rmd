@@ -46,5 +46,11 @@ nt <- 4
 nb <- 500
 nc <- 3
 
-# Call WinBUGS from R (BRT 3 min)
-out <- jags(dat, inits, params, "code/dynocc.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
+# Call JAGS from R
+strt <- Sys.time()
+out <- jags.parallel(dat, inits, params, "code/dynocc.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
+
+save(out, file="basic_model.Rda")
+
+print(Sys.time() - strt)
+print(out, digits=3)
