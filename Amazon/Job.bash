@@ -3,6 +3,11 @@
 # install apt-get
 curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
 
+# install pandoc
+curl -s https://github.com/jgm/pandoc/releases/tag/1.17.2/pandoc-1.17.2-1-amd64.deb
+sudo dpkg pandoc-1.17.2-1-amd64.deb
+sudo apt-get install -f
+
 # install git-lfs
 cd /usr/bin
 sudo apt-get install git-lfs
