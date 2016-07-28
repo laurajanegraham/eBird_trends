@@ -60,4 +60,4 @@ out <- JAGSParallel(n.cores = 3, data = dat, inits = inits, params = params, mod
 save(out, file="basic_model.Rda")
 
 print(Sys.time() - strt)
-print(out, digits=3)
+print(out$JAGSoutput, digits=3)
