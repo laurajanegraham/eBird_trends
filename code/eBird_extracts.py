@@ -105,4 +105,4 @@ for i in range(0, len(year)):
 
 
 r.assign("wide_dat", wide_dat)
-r("save(locations_full, file='D:/eBird_trends/data/hummingbirds_colorado.rda')")
+r("save(wide_dat, file='D:/eBird_trends/data/hummingbirds_colorado.rda')")
