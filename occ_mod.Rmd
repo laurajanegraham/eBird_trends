@@ -8,6 +8,7 @@ output:
 ---
 ```{r setup, message=FALSE, include=FALSE}
 library(R2jags)
+library(snowfall)
 load("locations_sml.rda")
 load("locations_full.rda")
 ```
@@ -48,7 +49,9 @@ nc <- 3
 
 # Call JAGS from R
 strt <- Sys.time()
-out <- jags.parallel(dat, inits, params, "code/dynocc.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
+
+source("code/JAGSParallel.R")
+out <- JAGSParallel(n.cores = 3, data = dat, inits = inits, params = params, model.file = "code/dynocc.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
 
 save(out, file="basic_model.Rda")
 
