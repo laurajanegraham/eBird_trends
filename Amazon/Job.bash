@@ -8,9 +8,11 @@ curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.s
 #sudo dpkg pandoc-1.17.2-1-amd64.deb
 #sudo apt-get install -f
 
-# install git-lfs
+# install git-lfs and pandoc
 cd /usr/bin
+sudo apt-get update
 sudo apt-get install git-lfs
+sudo apt-get install pandoc
 
 # clone repository and set GitHub credentials
 cd /home
