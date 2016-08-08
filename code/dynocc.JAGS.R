@@ -12,6 +12,13 @@ model {
     p[nyear,k] ~ dunif(0, 1)
   }
   
+  for (k in 1:nspecies){
+    alphap[k] ~ dnorm(0, 0.01)
+    for (np in 1:nparam){
+      beta[np, k] ~ dnorm(0, 0.01)
+      w[np, k] ~ dbern(0.5)
+    }
+  }
   
   # Ecological submodel: Define state conditional on parameters
   for (j in 1:nsite){
@@ -29,7 +36,8 @@ model {
     for (j in 1:nsite){
       for (k in 1:nspecies){
         for (l in 1:nrep){
-          muy[i,j,k,l] <- z[i,j,k]*p[i,k]
+          logit(p[i,j,k,l]) <- alphap[k] + w[1,k]*beta[1,k]*effort_hrs[i,j,l] + w[2,k]*beta[2,k]*day[i,j,l]
+          muy[i,j,k,l] <- z[i,j,k]*p[i,j,k,l]
           y[i,j,k,l] ~ dbern(muy[i,j,k,l])
         }#l
       } #k
