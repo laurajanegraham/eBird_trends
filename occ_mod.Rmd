@@ -9,6 +9,8 @@ output:
 ```{r setup, message=FALSE, include=FALSE}
 library(R2jags)
 library(snowfall)
+library(abind)
+library(R2WinBUGS)
 load("locations_sml.rda")
 load("locations_full.rda")
 ```
@@ -33,10 +35,12 @@ Firstly, we want to fit a model with no covariates and get some initial paramete
 ```{r basic_model}
 # Code modified from Kery and Schaub 2012
 # Bundle data
+wide_dat[is.nan(wide_dat)] <- NA
 dat <- list(y = wide_dat, nyear = dim(wide_dat)[1], nsite = dim(wide_dat)[2], nspecies = dim(wide_dat)[3], nrep = dim(wide_dat)[4])
 
 # Initial values
-zst <- apply(wide_dat, c(1, 2, 3), max)	# Observed occurrence as inits for z
+zst <- apply(wide_dat, c(1, 2, 3), max, na.rm=TRUE)	# Observed occurrence as inits for z
+zst[is.infinite(zst)] <- NA
 inits <- function(){ list(z = zst)}
 # Parameters monitored
 params <- c("psi", "phi", "gamma", "p", "n.occ", "growthr", "turnover")
@@ -56,4 +60,4 @@ out <- JAGSParallel(n.cores = 3, data = dat, inits = inits, params = params, mod
 save(out, file="basic_model.Rda")
 
 print(Sys.time() - strt)
-print(out, digits=3)
+print(out$JAGSoutput, digits=3)

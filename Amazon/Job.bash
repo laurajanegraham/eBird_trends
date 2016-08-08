@@ -21,7 +21,7 @@ iid=$(ec2metadata --instance-id)
 git checkout -b $iid
 
 # install required packages and run the job script
-R -e 'install.packages(c("rmarkdown", "snowfall", "R2jags"))'
+R -e 'install.packages(c("rmarkdown", "snowfall", "R2jags", "abind", "R2WinBUGS"))'
 Rscript -e 'rmarkdown::render("occ_mod.Rmd")' &> run.txt
 
 # push commits to local branch and push to github
