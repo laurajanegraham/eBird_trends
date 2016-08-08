@@ -1,0 +1,5 @@
+.Rhistory
+.Rproj.user/
+.ipynb_checkpoints/
+data/
+eBird_trends.Rproj

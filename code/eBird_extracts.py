@@ -66,12 +66,8 @@ r("save(locations_full, file='D:/eBird_trends/locations_full.rda')")
 # get the maximum number of unique sampling replicates 
 max_rep = humdat_obs[['obs_date', 'year', 'loc_id']].drop_duplicates().sort_values(['loc_id', 'obs_date'])
 max_rep = max(max_rep.groupby(['loc_id', 'year']).size())
-
-# need to do some kind of row sums to work out which rows have many observations. Also potentially a how many non-zero coluns type thing
-# get the looping levels
 year = humdat_obs.year.unique()
 loc_id = humdat_obs.loc_id.unique()
-# and the unique species
 species = pd.DataFrame(humdat_obs.species.unique(), columns = ['species'])
 species_full = pd.DataFrame(humdat.species.unique(), columns = ['species'])
 missing_species = species_full[~species_full.species.isin(species.species)]
