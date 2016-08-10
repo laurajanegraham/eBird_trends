@@ -32,7 +32,49 @@ dim(all_dat$sp_obs)
 
 Firstly, we want to fit a model with no covariates and get some initial parameter estimates out.
 
-```{r basic_model, eval = FALSE}
+```{r basic_model}
+# Code modified from Kery and Schaub 2012
+# Bundle data
+all_dat$sp_obs[is.nan(all_dat$sp_obs)] <- NA
+dat <- list(y = all_dat$sp_obs, nyear = dim(all_dat$sp_obs)[1], nsite = dim(all_dat$sp_obs)[2], nspecies = dim(all_dat$sp_obs)[3], nrep = dim(all_dat$sp_obs)[4])
+
+# Initial values
+zst <- apply(all_dat$sp_obs, c(1, 2, 3), max, na.rm=TRUE)	# Observed occurrence as inits for z
+zst[is.infinite(zst)] <- NA
+inits <- function(){ list(z = zst)}
+# Parameters monitored
+params <- c("psi", "phi", "gamma", "p")
+
+# MCMC settings
+ni <- 2500
+nt <- 4
+nb <- 500
+nc <- 3
+
+# Call JAGS from R
+strt <- Sys.time()
+
+source("code/JAGSParallel.R")
+out <- JAGSParallel(n.cores = 3, data = dat, inits = inits, params = params, model.file = "code/dynocc.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
+
+save(out, file="basic_model.rda")
+
+print(Sys.time() - strt)
+print(out$JAGSoutput, digits=3)
+```
+
+## Dynamic occupany model correcting for detection bias. 
+This model has covariates on the observation model and uses indicator variable selection to identify important parameters. Full set of parameters included is:
+
+- time
+- effort_hrs
+- day
+- year
+- population per sq mile
+- housing density
+- number of observers
+
+```{r covs_model, eval = FALSE}
 # Code modified from Kery and Schaub 2012
 # Bundle data
 all_dat$sp_obs[is.nan(all_dat$sp_obs)] <- NA # data comes out of SQL/Python with missing values coded as NaN - causes issues in JAGS
@@ -66,48 +108,6 @@ source("code/JAGSParallel.R")
 out <- JAGSParallel(n.cores = 3, data = dat, inits = inits, params = params, model.file = "code/dynocc_covs.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
 
 save(out, file="covs_model.Rda")
-
-print(Sys.time() - strt)
-print(out$JAGSoutput, digits=3)
-```
-
-## Dynamic occupany model correcting for detection bias. 
-This model has covariates on the observation model and uses indicator variable selection to identify important parameters. Full set of parameters included is:
-
-- time
-- effort_hrs
-- day
-- year
-- population per sq mile
-- housing density
-- number of observers
-
-```{r}
-# Code modified from Kery and Schaub 2012
-# Bundle data
-wide_dat[is.nan(wide_dat)] <- NA
-dat <- list(y = wide_dat, nyear = dim(wide_dat)[1], nsite = dim(wide_dat)[2], nspecies = dim(wide_dat)[3], nrep = dim(wide_dat)[4])
-
-# Initial values
-zst <- apply(wide_dat, c(1, 2, 3), max, na.rm=TRUE)	# Observed occurrence as inits for z
-zst[is.infinite(zst)] <- NA
-inits <- function(){ list(z = zst)}
-# Parameters monitored
-params <- c("psi", "phi", "gamma", "p", "n.occ", "growthr", "turnover")
-
-# MCMC settings
-ni <- 2500
-nt <- 4
-nb <- 500
-nc <- 3
-
-# Call JAGS from R
-strt <- Sys.time()
-
-source("code/JAGSParallel.R")
-out <- JAGSParallel(n.cores = 3, data = dat, inits = inits, params = params, model.file = "code/dynocc.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
-
-save(out, file="basic_model.Rda")
 
 print(Sys.time() - strt)
 print(out$JAGSoutput, digits=3)
