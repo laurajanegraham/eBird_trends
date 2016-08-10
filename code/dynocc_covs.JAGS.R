@@ -2,17 +2,25 @@ model {
   
   # Specify priors
   
+  # ecological priors
   for (k in 1:nspecies){
     psi1[k] ~ dunif(0, 1)
     for(i in 1:(nyear-1)){
       phi[i,k] ~ dunif(0, 1)
       gamma[i,k] ~ dunif(0, 1)
-      p[i,k] ~ dunif(0, 1) 
     }
-    p[nyear,k] ~ dunif(0, 1)
   }
-
-  # Ecological submodel: Define state conditional on parameters
+  
+  # observation coefficient priors
+  for (k in 1:nspecies){
+    alphap[k] ~ dnorm(0, 0.01)
+    for (np in 1:nparam){
+      betap[np, k] ~ dnorm(0, 0.01)
+      wp[np, k] ~ dbern(0.5)
+    }
+  }
+  
+  # ecological submodel: Define state conditional on parameters
   for (j in 1:nsite){
     for (k in 1:nspecies){
       z[1,j,k] ~ dbern(psi1[k])
@@ -23,11 +31,12 @@ model {
     } #k
   } #i
   
-  # Observation model
+  # observation model
   for (i in 1:nyear){
     for (j in 1:nsite){
       for (k in 1:nspecies){
         for (l in 1:nrep){
+          logit(p[i,j,k,l]) <- alphap[k] + wp[1,k]*betap[1,k]*effort_hrs[i,j,l] + wp[2,k]*betap[2,k]*day[l]
           muy[i,j,k,l] <- z[i,j,k]*p[i,j,k,l]
           y[i,j,k,l] ~ dbern(muy[i,j,k,l])
         }#l
