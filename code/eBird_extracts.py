@@ -15,20 +15,6 @@ pandas2ri.activate()
 # connect to database
 engine = create_engine('postgresql://postgres:password123.@localhost:5432/ebird_data')
 
-# get information about how many records are at each site/mon_year combination
-humdat_info = pd.read_sql_query("""SELECT sppres.species, loc_id, month, year, count(*)
-                                    FROM ebird_checklist_info info
-                           INNER JOIN ebird_checklist_species sppres
-                               ON info.sampling_event_id = sppres.sampling_event_id
-                           INNER JOIN ebird_species_info spinfo
-                               ON sppres.species = spinfo.species
-                           WHERE country = 'United_States' 
-                           AND family = 'Trochilidae' 
-                           AND year >=2004
-                           GROUP BY sppres.species, loc_id, month, year"""
-                           , con=engine)
-                           
-humdat_info.sort_values('count')
 # Extract the data for US, humminbirds, from 2004-2014
 humdat = pd.read_sql_query("""SELECT info.sampling_event_id, 
                            loc_id, 
@@ -46,7 +32,7 @@ humdat = pd.read_sql_query("""SELECT info.sampling_event_id,
                                ON sppres.species = spinfo.species
                            WHERE state_province = 'Colorado' 
                            AND family = 'Trochilidae' 
-                           AND year >=2004
+                           AND year >=2008
                            AND month IN (5, 6, 7)"""
                            , con=engine)
 
@@ -62,7 +48,7 @@ humdat_sml = humdat[['obs_date', 'year', 'loc_id']].drop_duplicates().groupby(['
 humdat_sml.columns = ['loc_id', 'year', 'obs']
 humdat_month_location = humdat_sml.pivot(index = 'loc_id', columns = 'year', values = 'obs').fillna(value=0)
 humdat_location_obs = humdat_month_location.apply(lambda x: (x >= 3).sum(), axis = 1)
-humdat_location = humdat_location_obs[humdat_location_obs > 0].reset_index()
+humdat_location = humdat_location_obs[humdat_location_obs > 5].reset_index()
 humdat_obs = humdat[humdat.loc_id.isin(humdat_location.loc_id)]
 
 # output the locations before and after data pruning to plot and compare in r
@@ -80,12 +66,8 @@ r("save(locations_full, file='D:/eBird_trends/locations_full.rda')")
 # get the maximum number of unique sampling replicates 
 max_rep = humdat_obs[['obs_date', 'year', 'loc_id']].drop_duplicates().sort_values(['loc_id', 'obs_date'])
 max_rep = max(max_rep.groupby(['loc_id', 'year']).size())
-
-# need to do some kind of row sums to work out which rows have many observations. Also potentially a how many non-zero coluns type thing
-# get the looping levels
 year = humdat_obs.year.unique()
 loc_id = humdat_obs.loc_id.unique()
-# and the unique species
 species = pd.DataFrame(humdat_obs.species.unique(), columns = ['species'])
 species_full = pd.DataFrame(humdat.species.unique(), columns = ['species'])
 missing_species = species_full[~species_full.species.isin(species.species)]
@@ -118,4 +100,5 @@ for i in range(0, len(year)):
         wide_dat[i][j] = data_juggle(humdat_obs, year[i], loc_id[j], species, max_rep)
 
 
-
+r.assign("wide_dat", wide_dat)
+r("save(wide_dat, file='D:/eBird_trends/data/hummingbirds_colorado.rda')")

@@ -11,8 +11,7 @@ model {
     }
     p[nyear,k] ~ dunif(0, 1)
   }
-  
-  
+
   # Ecological submodel: Define state conditional on parameters
   for (j in 1:nsite){
     for (k in 1:nspecies){
@@ -29,7 +28,7 @@ model {
     for (j in 1:nsite){
       for (k in 1:nspecies){
         for (l in 1:nrep){
-          muy[i,j,k,l] <- z[i,j,k]*p[i,k]
+          muy[i,j,k,l] <- z[i,j,k]*p[i,j,k,l]
           y[i,j,k,l] ~ dbern(muy[i,j,k,l])
         }#l
       } #k

@@ -3,14 +3,11 @@
 # install apt-get
 curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
 
-# install pandoc
-#curl -s https://github.com/jgm/pandoc/releases/tag/1.17.2/pandoc-1.17.2-1-amd64.deb
-#sudo dpkg pandoc-1.17.2-1-amd64.deb
-#sudo apt-get install -f
-
-# install git-lfs
+# install git-lfs and pandoc
 cd /usr/bin
-sudo apt-get install git-lfs
+sudo apt-get update
+sudo apt-get -y install git-lfs
+sudo apt-get -y install pandoc
 
 # clone repository and set GitHub credentials
 cd /home
@@ -23,8 +20,9 @@ cd eBird_trends
 iid=$(ec2metadata --instance-id)
 git checkout -b $iid
 
-# run the job script
-Rscript --no-save --no-restore --verbose code/occ_mod.R &> run.txt
+# install required packages and run the job script
+R -e 'install.packages(c("rmarkdown", "snowfall", "R2jags", "abind", "R2WinBUGS"))'
+Rscript -e 'rmarkdown::render("occ_mod.Rmd")' &> run.txt
 
 # push commits to local branch and push to github
 git add --all

@@ -11,11 +11,11 @@ import os
 import psycopg2 as psql
 
 # list the directories
-os.chdir(r'D:\eBird_trends\data\erd_western_hemisphere_data_grouped_by_year_v5.0')
+os.chdir(r'D:\eBird_trends\data\ebird_us48_data_grouped_by_year_v2014')
 files = next(os.walk('.'))[1]
 
 # connect to database
-con = psql.connect(dbname="ebird_data", host="localhost", port="5432", user="postgres", password="password123.")
+con = psql.connect(dbname="ebird_us_data", host="localhost", port="5432", user="postgres", password="password123.")
 cur = con.cursor()
 
 # if tables are in there already, remove (this will need commenting out if we want to append more data)
@@ -41,67 +41,67 @@ cur.execute("""CREATE TABLE ebird_checklist_info (
                                   NUMBER_OBSERVERS numeric,
                                   GROUP_ID varchar(50),
                                   PRIMARY_CHECKLIST_FLAG numeric,
-                                  ASTER2011_DEM numeric,
-                                  UMD2011_LANDCOVER numeric,
-                                  UMD2011_FS_L_1500_LPI numeric,
-                                  UMD2011_FS_L_1500_PD numeric,
-                                  UMD2011_FS_L_1500_ED numeric,
-                                  UMD2011_FS_C0_1500_PLAND numeric,
-                                  UMD2011_FS_C0_1500_LPI numeric,
-                                  UMD2011_FS_C0_1500_PD numeric,
-                                  UMD2011_FS_C0_1500_ED numeric,
-                                  UMD2011_FS_C1_1500_PLAND numeric,
-                                  UMD2011_FS_C1_1500_LPI numeric,
-                                  UMD2011_FS_C1_1500_PD numeric,
-                                  UMD2011_FS_C1_1500_ED numeric,
-                                  UMD2011_FS_C2_1500_PLAND numeric,
-                                  UMD2011_FS_C2_1500_LPI numeric,
-                                  UMD2011_FS_C2_1500_PD numeric,
-                                  UMD2011_FS_C2_1500_ED numeric,
-                                  UMD2011_FS_C3_1500_PLAND numeric,
-                                  UMD2011_FS_C3_1500_LPI numeric,
-                                  UMD2011_FS_C3_1500_PD numeric,
-                                  UMD2011_FS_C3_1500_ED numeric,
-                                  UMD2011_FS_C4_1500_PLAND numeric,
-                                  UMD2011_FS_C4_1500_LPI numeric,
-                                  UMD2011_FS_C4_1500_PD numeric,
-                                  UMD2011_FS_C4_1500_ED numeric,
-                                  UMD2011_FS_C5_1500_PLAND numeric,
-                                  UMD2011_FS_C5_1500_LPI numeric,
-                                  UMD2011_FS_C5_1500_PD numeric,
-                                  UMD2011_FS_C5_1500_ED numeric,
-                                  UMD2011_FS_C6_1500_PLAND numeric,
-                                  UMD2011_FS_C6_1500_LPI numeric,
-                                  UMD2011_FS_C6_1500_PD numeric,
-                                  UMD2011_FS_C6_1500_ED numeric,
-                                  UMD2011_FS_C7_1500_PLAND numeric,
-                                  UMD2011_FS_C7_1500_LPI numeric,
-                                  UMD2011_FS_C7_1500_PD numeric,
-                                  UMD2011_FS_C7_1500_ED numeric,
-                                  UMD2011_FS_C8_1500_PLAND numeric,
-                                  UMD2011_FS_C8_1500_LPI numeric,
-                                  UMD2011_FS_C8_1500_PD numeric,
-                                  UMD2011_FS_C8_1500_ED numeric,
-                                  UMD2011_FS_C9_1500_PLAND numeric,
-                                  UMD2011_FS_C9_1500_LPI numeric,
-                                  UMD2011_FS_C9_1500_PD numeric,
-                                  UMD2011_FS_C9_1500_ED numeric,
-                                  UMD2011_FS_C10_1500_PLAND numeric,
-                                  UMD2011_FS_C10_1500_LPI numeric,
-                                  UMD2011_FS_C10_1500_PD numeric,
-                                  UMD2011_FS_C10_1500_ED numeric,
-                                  UMD2011_FS_C12_1500_PLAND numeric,
-                                  UMD2011_FS_C12_1500_LPI numeric,
-                                  UMD2011_FS_C12_1500_PD numeric,
-                                  UMD2011_FS_C12_1500_ED numeric,
-                                  UMD2011_FS_C13_1500_PLAND numeric,
-                                  UMD2011_FS_C13_1500_LPI numeric,
-                                  UMD2011_FS_C13_1500_PD numeric,
-                                  UMD2011_FS_C13_1500_ED numeric,
-                                  UMD2011_FS_C16_1500_PLAND numeric,
-                                  UMD2011_FS_C16_1500_LPI numeric,
-                                  UMD2011_FS_C16_1500_PD numeric,
-                                  UMD2011_FS_C16_1500_ED numeric
+                                  POP00_SQMI numeric, 
+                                  HOUSING_DENSITY numeric,
+                                  HOUSING_PERCENT_VACANT numeric, 
+                                  ELEV_GT numeric, 
+                                  ELEV_NED numeric, 
+                                  BCR numeric,
+                                  BAILEY_ECOREGION varchar(5), 
+                                  OMERNIK_L3_ECOREGION numeric, 
+                                  CAUS_TEMP_AVG numeric,
+                                  CAUS_TEMP_MIN numeric, 
+                                  CAUS_TEMP_MAX numeric, 
+                                  CAUS_PREC numeric, 
+                                  CAUS_SNOW numeric,
+                                  NLCD2001_FS_C11_7500_PLAND numeric, 
+                                  NLCD2001_FS_C12_7500_PLAND numeric,
+                                  NLCD2001_FS_C21_7500_PLAND numeric, 
+                                  NLCD2001_FS_C22_7500_PLAND numeric,
+                                  NLCD2001_FS_C23_7500_PLAND numeric, 
+                                  NLCD2001_FS_C24_7500_PLAND numeric,
+                                  NLCD2001_FS_C31_7500_PLAND numeric, 
+                                  NLCD2001_FS_C41_7500_PLAND numeric,
+                                  NLCD2001_FS_C42_7500_PLAND numeric, 
+                                  NLCD2001_FS_C43_7500_PLAND numeric,
+                                  NLCD2001_FS_C52_7500_PLAND numeric, 
+                                  NLCD2001_FS_C71_7500_PLAND numeric,
+                                  NLCD2001_FS_C81_7500_PLAND numeric, 
+                                  NLCD2001_FS_C82_7500_PLAND numeric,
+                                  NLCD2001_FS_C90_7500_PLAND numeric, 
+                                  NLCD2001_FS_C95_7500_PLAND numeric,
+                                  NLCD2006_FS_C11_7500_PLAND numeric, 
+                                  NLCD2006_FS_C12_7500_PLAND numeric,
+                                  NLCD2006_FS_C21_7500_PLAND numeric, 
+                                  NLCD2006_FS_C22_7500_PLAND numeric,
+                                  NLCD2006_FS_C23_7500_PLAND numeric, 
+                                  NLCD2006_FS_C24_7500_PLAND numeric,
+                                  NLCD2006_FS_C31_7500_PLAND numeric, 
+                                  NLCD2006_FS_C41_7500_PLAND numeric,
+                                  NLCD2006_FS_C42_7500_PLAND numeric, 
+                                  NLCD2006_FS_C43_7500_PLAND numeric,
+                                  NLCD2006_FS_C52_7500_PLAND numeric, 
+                                  NLCD2006_FS_C71_7500_PLAND numeric,
+                                  NLCD2006_FS_C81_7500_PLAND numeric, 
+                                  NLCD2006_FS_C82_7500_PLAND numeric,
+                                  NLCD2006_FS_C90_7500_PLAND numeric, 
+                                  NLCD2006_FS_C95_7500_PLAND numeric,
+                                  NLCD2011_FS_C11_7500_PLAND numeric, 
+                                  NLCD2011_FS_C12_7500_PLAND numeric,
+                                  NLCD2011_FS_C21_7500_PLAND numeric, 
+                                  NLCD2011_FS_C22_7500_PLAND numeric,
+                                  NLCD2011_FS_C23_7500_PLAND numeric, 
+                                  NLCD2011_FS_C24_7500_PLAND numeric,
+                                  NLCD2011_FS_C31_7500_PLAND numeric, 
+                                  NLCD2011_FS_C41_7500_PLAND numeric,
+                                  NLCD2011_FS_C42_7500_PLAND numeric, 
+                                  NLCD2011_FS_C43_7500_PLAND numeric,
+                                  NLCD2011_FS_C52_7500_PLAND numeric, 
+                                  NLCD2011_FS_C71_7500_PLAND numeric,
+                                  NLCD2011_FS_C81_7500_PLAND numeric, 
+                                  NLCD2011_FS_C82_7500_PLAND numeric,
+                                  NLCD2011_FS_C90_7500_PLAND numeric, 
+                                  NLCD2011_FS_C95_7500_PLAND numeric
                               );""")
 cur.execute("""CREATE TABLE ebird_checklist_species (
                                   SAMPLING_EVENT_ID varchar(50), 
@@ -113,19 +113,18 @@ for f in files:
     if os.path.isfile(f + r'\checklists.csv'):
     # load the file
         checklist = f + r'\checklists.csv'
-        covariate = f + r'\extended-covariates.csv'
+        covariate = f + r'\core-covariates.csv'
 
         print("Loading data for " + f)
         # covariate file is narrow enough to read in all at once        
         covariate_dat = pd.read_csv(covariate, na_values = ['?', '-9999', '-9999.0000'])
-        
         # read in the checklist file 1000 rows at a time
         for checklist_dat in pd.read_csv(checklist, na_values = ['?'], chunksize = 10000):
         
             print("Manipulating sampling covariates for " + f)
             info = checklist_dat.ix[:,0:19]
             info = info.merge(covariate_dat)
-            info.to_csv(r'temp_info.csv', header = None, index = None, na_rep='NaN')
+            info.to_csv(r'temp_info.csv', header = None, index = None, na_rep='NULL')
             del info
             
             print("Manipulating species presences for " + f)
@@ -138,10 +137,10 @@ for f in files:
             del sp_pres
             
             print("Loading species presences for " + f + " into SQL database")
-            sp_sql = """COPY ebird_checklist_species FROM 'D:\\eBird_trends\\data\\erd_western_hemisphere_data_grouped_by_year_v5.0\\temp_sp.csv' WITH DELIMITER AS ',';"""
+            sp_sql = """COPY ebird_checklist_species FROM 'D:\\eBird_trends\\data\\ebird_us48_data_grouped_by_year_v2014\\temp_sp.csv' WITH DELIMITER AS ',';"""
             cur.execute(sp_sql)
             print("Loading sampling covariates for " + f + " into SQL database")
-            info_sql = """COPY ebird_checklist_info FROM 'D:\\eBird_trends\\data\\erd_western_hemisphere_data_grouped_by_year_v5.0\\temp_info.csv' WITH DELIMITER AS ',';"""
+            info_sql = """COPY ebird_checklist_info FROM 'D:\\eBird_trends\\data\\ebird_us48_data_grouped_by_year_v2014\\temp_info.csv' WITH DELIMITER AS ',' NULL AS 'NULL';"""
             cur.execute(info_sql)
 
         del covariate_dat
