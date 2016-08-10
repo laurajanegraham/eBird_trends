@@ -40,7 +40,7 @@ model {
             wp[1,k]*betap[1,k]*effort_hrs[i,j,l] + 
             wp[2,k]*betap[2,k]*day[l] +
             wp[3,k]*betap[3,k]*time[i,j,l] +
-            wp[4,k]*betap[4,k]*year[i,j] +
+            wp[4,k]*betap[4,k]*j + # given year is the index have not brought it in as a variable separately
             wp[5,k]*betap[5,k]*pop00_sqmi[i] +
             wp[6,k]*betap[6,k]*housing_density[i] +
             wp[7,k]*betap[7,k]*number_observers[i,j,l]
