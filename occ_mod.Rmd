@@ -11,6 +11,8 @@ library(R2jags)
 library(snowfall)
 library(abind)
 library(R2WinBUGS)
+library(dplyr)
+library(tidyr)
 load("locations_sml.rda")
 load("locations_full.rda")
 ```
@@ -32,7 +34,7 @@ dim(all_dat$sp_obs)
 
 Firstly, we want to fit a model with no covariates and get some initial parameter estimates out.
 
-```{r basic_model}
+```{r basic_model, eval = FALSE}
 # Code modified from Kery and Schaub 2012
 # Bundle data
 all_dat$sp_obs[is.nan(all_dat$sp_obs)] <- NA
@@ -79,26 +81,26 @@ This model has covariates on the observation model and uses indicator variable s
 # Bundle data
 all_dat$sp_obs[is.nan(all_dat$sp_obs)] <- NA # data comes out of SQL/Python with missing values coded as NaN - causes issues in JAGS
 nyear <- dim(all_dat$sp_obs)[1]
-#nsite <- dim(all_dat$sp_obs)[2]
-nsite <- 40 # make it run quicker for initial testing
+nsite <- dim(all_dat$sp_obs)[2]
+#nsite <- 40 # make it run quicker for initial testing
 nspecies <- dim(all_dat$sp_obs)[3]
-#nrep <-  dim(wide_dat)[4]
-nrep <- 10 # again, quicker for testing 
+nrep <-  dim(all_dat$sp_obs)[4]
+#nrep <- 10 # again, quicker for testing 
 nparam <- 2
 dat <- list(y = all_dat$sp_obs, nyear = nyear, nsite = nsite, nspecies = nspecies, nrep = nrep, effort_hrs = all_dat$effort_hrs, day = all_dat$day, nparam = nparam)
 
 # Initial values
 zst <- apply(all_dat$sp_obs, c(1, 2, 3), max, na.rm=TRUE)	# Observed occurrence as inits for z
 zst[is.infinite(zst)] <- NA
-zst <- zst[,1:40,]
+#zst <- zst[,1:40,]
 inits <- function(){ list(z = zst)}
 # Parameters monitored
 params <- c("psi", "phi", "gamma", "p", "alphap", "betap", "wp")
 
 # MCMC settings
-ni <- 2500
+ni <- 25000
 nt <- 4
-nb <- 500
+nb <- 5000
 nc <- 3
 
 # Call JAGS from R
@@ -107,9 +109,19 @@ strt <- Sys.time()
 source("code/JAGSParallel.R")
 out <- JAGSParallel(n.cores = 3, data = dat, inits = inits, params = params, model.file = "code/dynocc_covs.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
 
-save(out, file="covs_model.Rda")
+save(out, file="covs_model.rda")
 
 print(Sys.time() - strt)
-print(out$JAGSoutput, digits=3)
 ```
 
+```{r covs_analyse}
+load("covs_model.rda")
+
+# create data frame of summary statistics for analysis
+jags_sum <- as.data.frame(out$JAGSoutput$summary) %>%
+  mutate(param = rownames(.))
+
+# get estimates for the indicator variables
+wp <- filter(jags_sum, grepl('wp', param)) %>%
+  mutate(param = substr(param, 4, nchar(param) -1)) %>%
+  separate(param, c("parameter", "species"), sep="\\,")
