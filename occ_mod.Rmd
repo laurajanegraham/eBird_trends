@@ -13,6 +13,7 @@ library(abind)
 library(R2WinBUGS)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
 load("locations_sml.rda")
 load("locations_full.rda")
 ```
@@ -86,8 +87,25 @@ nsite <- dim(all_dat$sp_obs)[2]
 nspecies <- dim(all_dat$sp_obs)[3]
 nrep <-  dim(all_dat$sp_obs)[4]
 #nrep <- 10 # again, quicker for testing 
-nparam <- 2
-dat <- list(y = all_dat$sp_obs, nyear = nyear, nsite = nsite, nspecies = nspecies, nrep = nrep, effort_hrs = all_dat$effort_hrs, day = all_dat$day, nparam = nparam)
+
+# create the scaled parameters
+# need a function to scale an n-dimensional array
+scale_array <- function(in_dat) {
+  m <- mean(in_dat, na.rm=TRUE)
+  s <- sd(in_dat, na.rm=TRUE)
+  if(is.null(dim(in_dat))) {
+    out_dat <- (in_dat-m)/s
+  } else {
+    out_dat <- apply(in_dat, 1:length(dim(in_dat)), function(x) (x-m)/s)
+  }
+  return(out_dat)
+}
+
+param_dat <- all_dat[-1]
+param_dat$year <- 1:nyear
+param_dat <- lapply(param_dat, scale_array)
+nparam <- length(param_dat)
+dat <- list(y = all_dat$sp_obs, nyear = nyear, nsite = nsite, nspecies = nspecies, nrep = nrep, effort_hrs = param_dat$effort_hrs, day = param_dat$day, time = param_dat$time, number_observers = param_dat$number_observers, pop00_sqmi = param_dat$pop00_sqmi, housing_density = param_dat$housing_density, year = param_dat$year, nparam = nparam)
 
 # Initial values
 zst <- apply(all_dat$sp_obs, c(1, 2, 3), max, na.rm=TRUE)	# Observed occurrence as inits for z
@@ -98,9 +116,9 @@ inits <- function(){ list(z = zst)}
 params <- c("psi", "phi", "gamma", "p", "alphap", "betap", "wp")
 
 # MCMC settings
-ni <- 25000
+ni <- 15000
 nt <- 4
-nb <- 5000
+nb <- 10000
 nc <- 3
 
 # Call JAGS from R
@@ -123,5 +141,20 @@ jags_sum <- as.data.frame(out$JAGSoutput$summary) %>%
 
 # get estimates for the indicator variables
 wp <- filter(jags_sum, grepl('wp', param)) %>%
-  mutate(param = substr(param, 4, nchar(param) -1)) %>%
-  separate(param, c("parameter", "species"), sep="\\,")
+  mutate(param = substr(param, 4, nchar(param) - 1)) %>%
+  separate(param, c("parameter", "species"), sep="\\,") %>%
+  mutate(var_use = ifelse(mean > 0.5, 1, NA)) %>% select(parameter, species, var_use)
+
+# get the parameter estimates for the 'important' variables
+beta <- filter(jags_sum, grepl('betap', param)) %>%
+  mutate(param = substr(param, 7, nchar(param) - 1)) %>%
+  separate(param, c("parameter", "species"), sep="\\,") %>%
+  select(mean, parameter, species) %>%
+  merge(wp) %>%
+  mutate(mean = mean*var_use)
+
+# plot coefficient estimates in a covariate x species heatmap
+ggplot(data = beta, aes(x=parameter, y=species, fill=mean)) + 
+  geom_tile() + scale_fill_gradient2(low = "blue", high = "red")
+
+p <- filter(jags_sum, grepl('p\\[', param))
