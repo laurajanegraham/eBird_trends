@@ -31,40 +31,6 @@ dim(all_dat$sp_obs)
 ```
 
 # Initial models
-## Basic dynamic occupancy model (no covariates)
-
-Firstly, we want to fit a model with no covariates and get some initial parameter estimates out.
-
-```{r basic_model, eval = FALSE}
-# Code modified from Kery and Schaub 2012
-# Bundle data
-all_dat$sp_obs[is.nan(all_dat$sp_obs)] <- NA
-dat <- list(y = all_dat$sp_obs, nyear = dim(all_dat$sp_obs)[1], nsite = dim(all_dat$sp_obs)[2], nspecies = dim(all_dat$sp_obs)[3], nrep = dim(all_dat$sp_obs)[4])
-
-# Initial values
-zst <- apply(all_dat$sp_obs, c(1, 2, 3), max, na.rm=TRUE)	# Observed occurrence as inits for z
-zst[is.infinite(zst)] <- NA
-inits <- function(){ list(z = zst)}
-# Parameters monitored
-params <- c("psi", "phi", "gamma", "p")
-
-# MCMC settings
-ni <- 2500
-nt <- 4
-nb <- 500
-nc <- 3
-
-# Call JAGS from R
-strt <- Sys.time()
-
-source("code/JAGSParallel.R")
-out <- JAGSParallel(n.cores = 3, data = dat, inits = inits, params = params, model.file = "code/dynocc.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
-
-save(out, file="basic_model.rda")
-
-print(Sys.time() - strt)
-print(out$JAGSoutput, digits=3)
-```
 
 ## Dynamic occupany model correcting for detection bias. 
 This model has covariates on the observation model and uses indicator variable selection to identify important parameters. Full set of parameters included is:
@@ -127,10 +93,12 @@ strt <- Sys.time()
 source("code/JAGSParallel.R")
 out <- JAGSParallel(n.cores = 3, data = dat, inits = inits, params = params, model.file = "code/dynocc_covs.JAGS.R", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb)
 
-save(out, file="covs_model.rda")
+save(out, file="../eBird_trends_output/covs_model.rda")
 
 print(Sys.time() - strt)
 ```
+
+We can then plot this out to see if which variables are important for which species and the size of this importance. 
 
 ```{r covs_analyse}
 load("covs_model.rda")
@@ -156,5 +124,3 @@ beta <- filter(jags_sum, grepl('betap', param)) %>%
 # plot coefficient estimates in a covariate x species heatmap
 ggplot(data = beta, aes(x=parameter, y=species, fill=mean)) + 
   geom_tile() + scale_fill_gradient2(low = "blue", high = "red")
-
-p <- filter(jags_sum, grepl('p\\[', param))
