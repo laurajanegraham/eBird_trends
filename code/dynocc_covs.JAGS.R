@@ -35,7 +35,7 @@ model {
   for (i in 1:nyear){
     for (j in 1:nsite){
       for (k in 1:nspecies){
-        for (l in 1:nrep){
+        for (l in 1:nrep[i,j]){
           logit(p[i,j,k,l]) <- alphap[k] + 
             wp[1,k]*betap[1,k]*effort_hrs[i,j,l] + 
             wp[2,k]*betap[2,k]*day[l] +
@@ -52,15 +52,15 @@ model {
   } #i
   
   # Derived parameters: Sample and population occupancy, growth rate and turnover
-  # for (k in 1:nspecies){
-  #   psi[1,k] <- psi1
-  #   n.occ[1,k]<-sum(z[1,1:nsite,k])
-  #   for (i in 2:nyear){
-  #     psi[i,k] <- psi[i-1,k]*phi[i-1,k] + (1-psi[i-1,k])*gamma[i-1,k]
-  #     n.occ[i,k] <- sum(z[i,1:nsite,k])
-  #     growthr[i-1,k] <- psi[i,k]/psi[i-1,k]                         # originally we had growthr[k]. JAGS seem to dislike vectoring going from 2..K.
-  #     turnover[i-1,k] <- (1 - psi[i-1,k]) * gamma[i-1,k]/psi[i,k]
-  #   }
-  # }
+  for (k in 1:nspecies){
+    psi[1,k] <- psi1[k]
+    n.occ[1,k]<-sum(z[1,1:nsite,k])
+    for (i in 2:nyear){
+      psi[i,k] <- psi[i-1,k]*phi[i-1,k] + (1-psi[i-1,k])*gamma[i-1,k]
+      n.occ[i,k] <- sum(z[i,1:nsite,k])
+      growthr[i-1,k] <- psi[i,k]/psi[i-1,k]                         # originally we had growthr[k]. JAGS seem to dislike vectoring going from 2..K.
+      turnover[i-1,k] <- (1 - psi[i-1,k]) * gamma[i-1,k]/psi[i,k]
+    }
+  }
 }
 
