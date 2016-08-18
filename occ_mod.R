@@ -17,6 +17,8 @@ nsite <- dim(all_dat$sp_obs)[2]
 #nsite <- 40 # make it run quicker for initial testing
 nspecies <- dim(all_dat$sp_obs)[3]
 nrep <-  dim(all_dat$sp_obs)[4]
+nrep <- apply(all_dat$sp_obs, c(1,2), function(x) max(which(!is.na(x[1,]))))
+nrep[is.infinite(nrep)] <- 0
 #nrep <- 10 # again, quicker for testing 
 
 # create the scaled parameters
