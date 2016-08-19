@@ -111,11 +111,11 @@ beta_df <- data.frame(val = vals, parameter = idx$Var2, species = idx$Var1) %>%
   mutate(val = val*var_use) %>%
   merge(param_names) %>% merge(species_names)
 
-test <- filter(beta_df, parameter==1)
+beta_df <- beta_df[complete.cases(beta_df),]
 
 param_density <- ggplot(data = beta_df, aes(x = val, fill=species_name, colour = species_name)) + 
   geom_density(alpha=0.1) + 
-  facet_wrap(~param_name)
+  facet_wrap(~param_name, scales="free")
 
 save_plot("param_density.png", param_density, base_width = 12, base_height = 12)
 
