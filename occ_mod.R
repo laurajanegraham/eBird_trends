@@ -64,6 +64,8 @@ save(out, file="../eBird_trends_output/covs_model.rda")
 
 print(Sys.time() - strt)
 
+# PLOT 1: Heat map of important detection parameters
+# Easier for initial viewing
 # create data frame of summary statistics for analysis
 jags_sum <- as.data.frame(out$JAGSoutput$summary) %>%
   mutate(param = rownames(.))
@@ -94,6 +96,27 @@ param_plot <- ggplot(data = beta, aes(x=param_name, y=species_name, fill=mean)) 
 
 save_plot("param_plot.png", param_plot, base_width=12, base_height=12)
 
+# PLOT 2: Density plot of important parameter estimates
+# Carries more information
+# get the coefficient values from JAGS output
+jags_beta <- out$JAGSoutput$sims.list$betap %>%
+  mutate(param = rownames(.))
 
+# these need to be in a dataframe with values, parameter number and species number (based on indices of array)
+vals <- c(jags_beta)
+idx <- expand.grid(1:dim(jags_beta)[3],1:dim(jags_beta)[2])
+idx <- idx[rep(seq_len(nrow(idx)), each=750),]
+beta_df <- data.frame(val = vals, parameter = idx$Var2, species = idx$Var1) %>%
+  merge(wp) %>%
+  mutate(val = val*var_use) %>%
+  merge(param_names) %>% merge(species_names)
+
+test <- filter(beta_df, parameter==1)
+
+param_density <- ggplot(data = beta_df, aes(x = val, fill=species_name, colour = species_name)) + 
+  geom_density(alpha=0.1) + 
+  facet_wrap(~param_name)
+
+save_plot("param_density.png", param_density, base_width = 12, base_height = 12)
 
 
