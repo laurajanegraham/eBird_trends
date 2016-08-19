@@ -49,9 +49,9 @@ inits <- function(){ list(z = zst)}
 params <- c("psi", "phi", "gamma", "p", "alphap", "betap", "wp")
 
 # MCMC settings
-ni <- 15000
+ni <- 5000
 nt <- 4
-nb <- 14000
+nb <- 4000
 nc <- 3
 
 # Call JAGS from R
@@ -69,7 +69,7 @@ jags_sum <- as.data.frame(out$JAGSoutput$summary) %>%
   mutate(param = rownames(.))
 
 param_names <- data.frame(param_name=c("effort_hrs", "day", "time", "year", "pop00_sqmi", "housing_density", "number_observers"), parameter=1:7)
-
+species_names <- data.frame(species_name=all_dat$species$species, species=1:nrow(all_dat$species))
 # get estimates for the indicator variables
 wp <- filter(jags_sum, grepl('wp', param)) %>%
   mutate(param = substr(param, 4, nchar(param) - 1)) %>%
@@ -80,15 +80,15 @@ wp <- filter(jags_sum, grepl('wp', param)) %>%
 beta <- filter(jags_sum, grepl('betap', param)) %>%
   mutate(param = substr(param, 7, nchar(param) - 1)) %>%
   separate(param, c("parameter", "species"), sep="\\,") %>%
-  select(mean, parameter, species) %>%
+  #select(mean, parameter, species) %>%
   merge(wp) %>%
   mutate(mean = mean*var_use) %>%
-  merge(param_names)
+  merge(param_names) %>% merge(species_names)
 
 # will also need to merge on species name once I have the .rda with them in
 
 # plot coefficient estimates in a covariate x species heatmap
-param_plot <- ggplot(data = beta, aes(x=param_name, y=species, fill=mean)) + 
+param_plot <- ggplot(data = beta, aes(x=param_name, y=species_name, fill=mean)) + 
   geom_tile() + scale_fill_gradient2(low = "blue", high = "red") +
   xlab("Covariate") + ylab("Species")
 
