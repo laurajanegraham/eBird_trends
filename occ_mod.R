@@ -34,7 +34,7 @@ scale_array <- function(in_dat) {
   return(out_dat)
 }
 
-param_dat <- all_dat[-1]
+param_dat <- all_dat[-c(1,2)]
 param_dat$year <- 1:nyear
 param_dat <- lapply(param_dat, scale_array)
 nparam <- length(param_dat)
