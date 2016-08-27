@@ -16,9 +16,9 @@ nyear <- dim(all_dat$sp_obs)[1]
 nsite <- dim(all_dat$sp_obs)[2]
 #nsite <- 40 # make it run quicker for initial testing
 nspecies <- dim(all_dat$sp_obs)[3]
-#nrep <-  dim(all_dat$sp_obs)[4]
-nrep <- apply(all_dat$sp_obs, c(1,2), function(x) max(which(!is.na(x[1,]))))
-nrep[is.infinite(nrep)] <- 0
+nrep <-  dim(all_dat$sp_obs)[4]
+#nrep <- apply(all_dat$sp_obs, c(1,2), function(x) max(which(!is.na(x[1,]))))
+#nrep[is.infinite(nrep)] <- 0
 #nrep <- 10 # again, quicker for testing 
 
 # create the scaled parameters
@@ -46,12 +46,12 @@ zst[is.infinite(zst)] <- NA
 #zst <- zst[,1:40,]
 inits <- function(){ list(z = zst)}
 # Parameters monitored
-params <- c("psi", "phi", "gamma", "p", "alphap", "betap", "wp")
+params <- c("psi", "n.occ", "growthr", "betap", "wp", "mean_p")
 
 # MCMC settings
-ni <- 5000
+ni <- 10000
 nt <- 4
-nb <- 4000
+nb <- 9000
 nc <- 3
 
 # Call JAGS from R
@@ -99,13 +99,12 @@ save_plot("param_plot.png", param_plot, base_width=12, base_height=12)
 # PLOT 2: Density plot of important parameter estimates
 # Carries more information
 # get the coefficient values from JAGS output
-jags_beta <- out$JAGSoutput$sims.list$betap %>%
-  mutate(param = rownames(.))
+jags_beta <- out$JAGSoutput$sims.list$betap
 
 # these need to be in a dataframe with values, parameter number and species number (based on indices of array)
 vals <- c(jags_beta)
 idx <- expand.grid(1:dim(jags_beta)[3],1:dim(jags_beta)[2])
-idx <- idx[rep(seq_len(nrow(idx)), each=750),]
+idx <- idx[rep(seq_len(nrow(idx)), each=dim(jags_beta)[1]),]
 beta_df <- data.frame(val = vals, parameter = idx$Var2, species = idx$Var1) %>%
   merge(wp) %>%
   mutate(val = val*var_use) %>%
@@ -119,4 +118,20 @@ param_density <- ggplot(data = beta_df, aes(x = val, fill=species_name, colour =
 
 save_plot("param_density.png", param_density, base_width = 12, base_height = 12)
 
+# PLOT 3: Estimates of number of occupied locations
+year <- data.frame(year = 1:11, Year = 2004:2014)
 
+jags_nocc <- as.data.frame(out$JAGSoutput$summary[grep("n.occ", row.names(out$JAGSoutput$summary)),]) %>%
+  mutate(param = substr(row.names(.), 7, nchar(row.names(.))-1)) %>%
+  separate(param, c("year", "species"), sep="\\,") %>%
+  merge(species_names) %>% merge(year)
+
+names(jags_nocc)[c(5,9)] <- c("min_CI", "max_CI")
+
+jags_nocc[c(3, 5, 9)] <- (jags_nocc[c(3,5,9)]/nsite)*100
+
+nocc_plot <- ggplot(jags_nocc, aes(x = Year, y = mean)) +
+  geom_point() + geom_line() + geom_errorbar(aes(ymax=max_CI, ymin=min_CI)) +
+  facet_wrap(~species_name)
+
+save_plot("p_occupied.png", nocc_plot, base_width = 12, base_height = 12)
