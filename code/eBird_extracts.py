@@ -73,32 +73,32 @@ species_full = pd.DataFrame(humdat.species.unique(), columns = ['species'])
 missing_species = species_full[~species_full.species.isin(species.species)]
 
 # try subsetting by month and creating a dataframe per month
-def data_juggle(in_dat, timestep, location, species, max_rep):
-    dat_sub = in_dat[(in_dat.year == timestep) & (in_dat.loc_id == location)]
+def data_juggle(in_dat, location, species):
+    dat_sub = in_dat[in_dat.loc_id == location]
     dat_sub = dat_sub[['species', 'obs_date', 'value']].drop_duplicates()
     # get lookup for date/time and replicate
-    if dat_sub.shape[0]==0:
-        out_dat = np.zeros((species.size, max_rep))
-        out_dat[:] = np.NaN
-    else:
-        sampling_reps = dat_sub[['obs_date']].drop_duplicates().sort_values(['obs_date'])
-        sampling_reps['replicate'] = range(1, len(sampling_reps) + 1)
-        
-        dat_samp_reps = dat_sub.merge(sampling_reps)
-        dat_wide = dat_samp_reps.pivot(index = 'species',columns = 'replicate', values = 'value').reset_index()
-        dat_species = species.merge(dat_wide,how = "left").fillna(value = 0)
-        extra_cols = list(range(dat_species.columns[dat_species.shape[1]-1]+1, max_rep+1))
-        extra_cols = pd.DataFrame(index = dat_species.index, columns = extra_cols)
-        out_dat = pd.concat([dat_species, extra_cols], axis = 1).drop(['species'], axis = 1).as_matrix()
-        print( str(timestep) + ' ' + str(location) + ' done...')
+    sampling_reps = dat_sub[['obs_date']].drop_duplicates().sort_values(['obs_date'])
+    sampling_reps['replicate'] = range(1, len(sampling_reps) + 1)
+    
+    dat_samp_reps = dat_sub.merge(sampling_reps)
+    dat_wide = dat_samp_reps.pivot(index = 'species',columns = 'replicate', values = 'value').reset_index()
+    dat_species = species.merge(dat_wide,how = "left").fillna(value = 0)
+    #extra_cols = list(range(dat_species.columns[dat_species.shape[1]-1]+1, max_rep+1))
+    #extra_cols = pd.DataFrame(index = dat_species.index, columns = extra_cols)
+    out_dat = dat_species.drop(['species'], axis = 1).as_matrix()
     return out_dat;
     
-wide_dat = np.zeros((year.size, loc_id.size, species.size, max_rep))
+wide_dat = list()
 
 for i in range(0, len(year)):
+    dat_year = humdat_obs[humdat_obs.year == year[i]]
+    loc_id = dat_year.loc_id.unique()
+    loc_dat = list()
     for j in range(0, len(loc_id)):
-        wide_dat[i][j] = data_juggle(humdat_obs, year[i], loc_id[j], species, max_rep)
+        loc_dat.append(data_juggle(humdat_obs,loc_id[j], species))
+    wide_dat.append(loc_dat)
+    print(str(year[i]) + ' processed')
 
 
 r.assign("wide_dat", wide_dat)
-r("save(wide_dat, file='D:/eBird_trends/data/hummingbirds_colorado.rda')")
+r("save(wide_dat, file='D:/eBird_trends/data/test.rda')")
