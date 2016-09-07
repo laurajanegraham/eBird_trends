@@ -1,0 +1,134 @@
+---
+title: "eBird Trends"
+author: "Laura J. Graham"
+date: "23 August 2016"
+output: pdf_document
+---
+```{r setup, message=FALSE, include=FALSE}
+library(R2jags)
+library(snowfall)
+library(abind)
+library(R2WinBUGS)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+# Introduction
+
+Climate change and habitat loss together form the biggest threats to biodiversity. 
+
+Ecological processes such as colonisation and persistence provide us with information about how species will respond to climate and land-use change. 
+
+Understanding how species' relatioships with their environment varies depending on their functional groups can give us better information about the drivers affecting populations and greater predictability about which species are likely to be in decline. 
+
+Citizen science data, although unstructured, provide us with broader spatial and temporal coverage of species observations than would otherwise be possible, from which we can extract information about ecological processes and their relationship with climate and land-use change.
+
+Dynamic occupancy models separately model the ecological and observation processes while explicitly modelling initial occupancy, persistence and colonisation probabilities [@MacKenzie2003; @Kery2010]. These are modelled using repeat observations in many sites within a closed sampling period (in our case, we have assumed population closure over the breeding season). This has the benefit that covariates on the observation process can correct for imperfect detection due to a range of factors and covariates on the ecological processes of colonisation and persistence provide a more mechanistic understanding of the species' relationship with their environment.
+
+## Aims/Objectives
+1. What are the environmental drivers behind colonisation and persistence for birds?
+2. How do these differ by species? Is there a pattern in species which are more affected by climate than land-use change? Migrants vs. Residents; habitat specialists vs. habitat generalists. 
+3. Is there a difference between the drivers of colonisation and persistence?
+4. What is the role of functional/morphological traits?
+
+# Methods
+## Species data
+We extracted data for 2004--2014 from the eBird Reference Dataset [ERD; @Sullivan2009; *available online* www.ebird.org]. This dataset contains complete species lists for each site visit. We only used records which had been collected under the "Stationary Count", "Travelling Count" and "Exhaustive Area Count" protocols. We limited the data to the breeding season (May to July) which we assume is a period of closure. The dynamic occupancy model approach (described below) requires repeat visits within this period of closure: we limit repeat visits to one per day, meaning the maximum number of replicates is 92.
+
+## Dynamic occupancy model
+We created a multi-species dynamic occupancy model to create species trends and understand the relationships between species and their environment. Dynamic occupancy models involve modelling the ecological process seperately from the observation process. In the ecological process model, the species' occupancy ($z_{ijk}$) in year $i$ at site $j$ for species $k$ is an unobserved latent variable. This is modelled in the first year as a Bernoulli trial with success parameter as the probability of initial occupancy ($\psi$): $z_{ijk}$ ~ Bernoulli($\psi_k$). Species' occupancy in subsequent years is modelled as a function of species specific colonisation and persistence parameters: $z_{ijk}$ ~ Bernoulli($z_{(i-1)jk}\phi_{(i-1)k} + (1 - z_{(i-1)jk})\gamma_{(i-1)k}$), where $\phi$ is the probability of persistence and $\gamma$ the probability of colonisation. $\psi$, $\phi$ and $\gamma$ all have uniform priors $U(0,1)$.
+
+- In order to investigate the relationship between the ecological processes and the environment, we will introduce covariates onto $\phi$ and $\gamma$ in a similar way to the covariates on $p$ described below. 
+
+The observed data $y_{ijkl}$ for each replicate $l$ is modelled as a Bernoulli variable with success parameter a function of $z_{ijk}$ and the probability of detecting the species assuming it is present $p_{ijkl}$: $y_{ijkl}$ ~ Bernoulli($z_{ijk}p_{ijkl}$).
+
+In order to account for biases in detection, it is possible to introduce covariates onto the probability of detection. There are spatial, temporal and observer biases in the eBird data: more observations near urban areas; more observations in later years; greater chance of detecting a species in a longer survey duration. Therefore we included covariates on the observation process which accounted for such biases: observer effort (hours), day of observation, time of observation, year of observation, population per square mile (2000 census), housing density per square mile (2000 census) and number of observers. These variables are all available for each unique survey occasion on ERD. We used an indicator variable selection approach to identify the covariates most affecting detection probabilities for each species. This involves using a dummy variable $w_{xk}$ whose value is the weight of covariate $x$ in the model for each species $k$. Here, detection probability is modelled as:
+
+$$logit(p_{ijkl}) = \alpha_k + w_{1k}\beta_{1k} * effort_{ijl} + w_{2k}\beta_{2k} * day{l} + w_{3k}\beta_{3k} * time_{ijl} + w_{4k}\beta_{4k} * year_{i} + w_{5k}\beta_{5k} * pop_{i} + w_{6k}\beta_{6k} * housing_{ijl} + w_{7k}\beta_{7k} * numobs_{ijl}$$
+
+where the $w_x$ have priors drawn from a Bernoulli distribution with success parameter 0.5 and $\beta_x$ have priors drawn from a normal distribution with mean 0 and precision 0.01. 
+
+For the analysis we ran 3 chains of x iterations with a burn-in of x and thinned by 4. All analyses were run in JAGS using the R package R2jags. Convergence was assessed using the Rhat statistic (Rhat < 1.1).
+
+# Results
+For the initial testing of the modelling process, I have taken a subset of the eBird hummingbird observations for Colorado and the results for the parameters on the detection process and the proportion of occupied sites for each species in each year are given below. 
+
+NB I have yet to run for enough iterations for all parameters to converge, hence the wide CIs and distributions. Additionally, the results are a little weird due to this, particularly the detection parameters (e.g. year being important but having a negative effect on detection probability). I have some slight concerns about computational capacity on this which are probably worth discussing. 
+
+```{r param_plot, echo=FALSE, fig.width=12}
+load("../eBird_trends_output/covs_model.rda")
+load("data/hummingbirds_colorado.rda")
+# PLOT 1: Heat map of important detection parameters
+# Easier for initial viewing
+# create data frame of summary statistics for analysis
+jags_sum <- as.data.frame(out$JAGSoutput$summary) %>%
+  mutate(param = rownames(.))
+
+param_names <- data.frame(param_name=c("effort_hrs", "day", "time", "year", "pop00_sqmi", "housing_density", "number_observers"), parameter=1:7)
+species_names <- data.frame(species_name=all_dat$species$species, species=1:nrow(all_dat$species))
+# get estimates for the indicator variables
+wp <- filter(jags_sum, grepl('wp', param)) %>%
+  mutate(param = substr(param, 4, nchar(param) - 1)) %>%
+  separate(param, c("parameter", "species"), sep="\\,") %>%
+  mutate(var_use = ifelse(mean > 0.5, 1, NA)) %>% select(parameter, species, var_use)
+
+# get the parameter estimates for the 'important' variables
+beta <- filter(jags_sum, grepl('betap', param)) %>%
+  mutate(param = substr(param, 7, nchar(param) - 1)) %>%
+  separate(param, c("parameter", "species"), sep="\\,") %>%
+  #select(mean, parameter, species) %>%
+  merge(wp) %>%
+  mutate(mean = mean*var_use) %>%
+  merge(param_names) %>% merge(species_names)
+
+# will also need to merge on species name once I have the .rda with them in
+
+# plot coefficient estimates in a covariate x species heatmap
+ggplot(data = beta, aes(x=param_name, y=species_name, fill=mean)) + 
+  geom_tile() + scale_fill_gradient2(low = "blue", high = "red") +
+  xlab("Covariate") + ylab("Species")
+```
+
+```{r param_density, echo=FALSE, fig.width=12}
+jags_beta <- out$JAGSoutput$sims.list$betap
+
+# these need to be in a dataframe with values, parameter number and species number (based on indices of array)
+vals <- c(jags_beta)
+idx <- expand.grid(1:dim(jags_beta)[3],1:dim(jags_beta)[2])
+idx <- idx[rep(seq_len(nrow(idx)), each=dim(jags_beta)[1]),]
+beta_df <- data.frame(val = vals, parameter = idx$Var2, species = idx$Var1) %>%
+  merge(wp) %>%
+  mutate(val = val*var_use) %>%
+  merge(param_names) %>% merge(species_names)
+
+beta_df <- beta_df[complete.cases(beta_df),]
+
+ggplot(data = beta_df, aes(x = val, fill=species_name, colour = species_name)) + 
+  geom_density(alpha=0.1) + 
+  facet_wrap(~param_name, scales="free")
+```
+
+```{r p_occ, echo=FALSE, fig.width=12}
+year <- data.frame(year = 1:11, Year = 2004:2014)
+
+jags_nocc <- as.data.frame(out$JAGSoutput$summary[grep("n.occ", row.names(out$JAGSoutput$summary)),]) %>%
+  mutate(param = substr(row.names(.), 7, nchar(row.names(.))-1)) %>%
+  separate(param, c("year", "species"), sep="\\,") %>%
+  merge(species_names) %>% merge(year)
+
+names(jags_nocc)[c(5,9)] <- c("min_CI", "max_CI")
+
+nsite <- dim(all_dat$sp_obs)[2]
+
+jags_nocc[c(3, 5, 9)] <- (jags_nocc[c(3,5,9)]/nsite)*100
+
+ggplot(jags_nocc, aes(x = Year, y = mean)) +
+  geom_point() + geom_line() + geom_errorbar(aes(ymax=max_CI, ymin=min_CI)) +
+  facet_wrap(~species_name) + ylab("Mean proportion of occupied sites with 95% CI")
+
+```
+
+# Discussion
+
+# References
