@@ -27,10 +27,13 @@ Citizen science data, although unstructured, provide us with broader spatial and
 Dynamic occupancy models separately model the ecological and observation processes while explicitly modelling initial occupancy, persistence and colonisation probabilities [@MacKenzie2003; @Kery2010]. These are modelled using repeat observations in many sites within a closed sampling period (in our case, we have assumed population closure over the breeding season). This has the benefit that covariates on the observation process can correct for imperfect detection due to a range of factors and covariates on the ecological processes of colonisation and persistence provide a more mechanistic understanding of the species' relationship with their environment.
 
 ## Aims/Objectives
-1. What are the environmental drivers behind colonisation and persistence for birds?
-2. How do these differ by species? Is there a pattern in species which are more affected by climate than land-use change? Migrants vs. Residents; habitat specialists vs. habitat generalists. 
-3. Is there a difference between the drivers of colonisation and persistence?
-4. What is the role of functional/morphological traits?
+1. What are the environmental drivers behind colonisation and persistence for birds? Is there a difference between the drivers of colonisation and persistence?
+
+- Prediction: colonisation mainly affected by climate; persistence by land-cover
+
+2. How do these differ by species? Is there a pattern in species which are more affected by climate than land-use change? Migrants vs. Residents; habitat specialists vs. habitat generalists; core vs edge populations. 
+
+- Prediction: effect stronger in residents; habitat specialists more affected by land cover, generalists by climate; core populations more affected by land cover, edge populations by climate.
 
 # Methods
 ## Species data
