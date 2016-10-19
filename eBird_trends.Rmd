@@ -6,7 +6,7 @@ output:
   pdf_document: default
   html_document:
     theme: journal
-bibliography: ~/Documents/bibtex_files/Postdoc Stony Brook-eBird Trends.bib
+#bibliography: ~/Documents/bibtex_files/Postdoc Stony Brook-eBird Trends.bib
 ---
 
 ## Basic idea

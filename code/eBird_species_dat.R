@@ -8,7 +8,7 @@ library(RPostgreSQL)
 
 # set up connection
 drv <- dbDriver("PostgreSQL")
-con <- dbConnect(drv, dbname="ebird_US_data", host="localhost", port="5432", user="postgres", password="password123.")
+con <- dbConnect(drv, dbname="ebird_us_data", host="localhost", port="5432", user="postgres", password="password123.")
 
 species <- dbGetQuery(con, "SELECT DISTINCT species FROM ebird_checklist_species;")
 species <- gsub("_", " ", species$species)

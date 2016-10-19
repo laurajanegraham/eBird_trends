@@ -11,7 +11,7 @@ import os
 import psycopg2 as psql
 
 # list the directories
-os.chdir(r'D:\eBird_trends\data\ebird_us48_data_grouped_by_year_v2014')
+os.chdir(r'D:\Laura\eBird_trends\data\ebird_us48_data_grouped_by_year_v2014')
 files = next(os.walk('.'))[1]
 
 # connect to database
@@ -137,10 +137,10 @@ for f in files:
             del sp_pres
             
             print("Loading species presences for " + f + " into SQL database")
-            sp_sql = """COPY ebird_checklist_species FROM 'D:\\eBird_trends\\data\\ebird_us48_data_grouped_by_year_v2014\\temp_sp.csv' WITH DELIMITER AS ',';"""
+            sp_sql = """COPY ebird_checklist_species FROM 'D:\\Laura\\eBird_trends\\data\\ebird_us48_data_grouped_by_year_v2014\\temp_sp.csv' WITH DELIMITER AS ',';"""
             cur.execute(sp_sql)
             print("Loading sampling covariates for " + f + " into SQL database")
-            info_sql = """COPY ebird_checklist_info FROM 'D:\\eBird_trends\\data\\ebird_us48_data_grouped_by_year_v2014\\temp_info.csv' WITH DELIMITER AS ',' NULL AS 'NULL';"""
+            info_sql = """COPY ebird_checklist_info FROM 'D:\\Laura\\eBird_trends\\data\\ebird_us48_data_grouped_by_year_v2014\\temp_info.csv' WITH DELIMITER AS ',' NULL AS 'NULL';"""
             cur.execute(info_sql)
 
         del covariate_dat
