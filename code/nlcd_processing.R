@@ -4,6 +4,7 @@ library(raster)
 nlcd <- raster("data/NLCD/nlcd_2011_landcover_2011_edition_2014_10_10/nlcd_2011_landcover_2011_edition_2014_10_10/nlcd_2011_landcover_2011_edition_2014_10_10.img")
 
 # load lookup to coarser categories and reclassify
+# categories loosly based on Gardner and Urban 2007 Landscape Ecol. 
 nlcd_lookup <- read.csv("data/NLCD/nlcd_lookup.csv")
 lc_out <- subs(nlcd, nlcd_lookup, by='nlcd', which='lc')
 
