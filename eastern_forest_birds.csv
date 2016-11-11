@@ -1,4 +1,4 @@
-Common Name,Scientific Name,Migration Status,Dietary Guild
+common_name,scientific_name,mig_status,dietary_guild
 Acadian Flycatcher,Empidonax virescens,Neotropical,Invertebrate
 American Redstart,Setophaga ruticilla,Neotropical,Invertebrate
 Black-and-white Warbler,Mniotilta varia,Neotropical,Invertebrate
@@ -42,4 +42,3 @@ Wood Thrush,Hylocichla mustelina,Neotropical,Invertebrate
 Yellow-billed Cuckoo,Coccyzus americanus,Neotropical,Invertebrate
 Yellow-throated Vireo,Vireo flavifrons,Neotropical,Invertebrate
 Yellow-throated Warbler,Dendroica dominica,Neotropical,Invertebrate
-,,,
