@@ -8,16 +8,17 @@ Created on Thu Oct 20 14:29:56 2016
 import pandas as pd
 import numpy as np
 import os
+from rpy2.robjects import pandas2ri, r
 
-os.chdir(r'D:\Laura\eBird_trends\data\ebird_us48_data_grouped_by_year_v2014')
+os.chdir(r'HUMMINGBIRDS\eBird_trends\data\ebird_us48_data_grouped_by_year_v2014')
 files = next(os.walk('.'))[1]
 
 # get the species of interest
-ef_birds = pd.read_csv('D:\Laura\eBird_trends\eastern_forest_birds.csv')
+ef_birds = pd.read_csv('..\..\eastern_forest_birds.csv')
 ef_birds.scientific_name = ef_birds.scientific_name.str.replace(' ', '_')
 ef_species = ef_birds.scientific_name.tolist()
 
-f = files[5]
+for f in files:
     # only want to go into folders which actually have the checklists.csv (e.g. the doc folder should be ignored)
     if os.path.isfile(f + r'\checklists.csv'):
     # load the file
@@ -32,7 +33,7 @@ f = files[5]
         birds = birds.astype(str)
         birds_bool = birds != '0' 
         
-        checklist_dat = pd.concat([checklist_dat[0:19], birds_bool], axis=1) # this selects riows up to 19, need to do columns
+        checklist_dat = pd.concat([checklist_dat.ix[:,0:19], birds_bool], axis=1) # this selects riows up to 19, need to do columns
         
         dat = checklist_dat.query("MONTH in (5, 6, 7) & COUNT_TYPE in ('P21', 'P22', 'P23') & PRIMARY_CHECKLIST_FLAG == 1.0")
         
@@ -40,13 +41,25 @@ f = files[5]
         days = pd.DataFrame({'DAY': dat.DAY.unique(), 'REP': np.repeat(list(range(7)), [14, 13, 13, 13, 13, 13, 13], axis=0)})
         dat = dat.merge(days)
         
-        dat_gp = dat.groupby(['LATITUDE', 'LONGITUDE', 'REP'])
+        # get the unique lat long so that it can be exported and the unique cell id for the covariate raster collected
+        lat_long = dat.ix[:,2:4].drop_duplicates()
+        lat_long.to_csv(r'../temp_lat_long.csv', index = None)
+        
+        # doing this bit in R because not a clue how in python 
+        r("source('../../code/get_cell.R')")
+        
+        # load the lat_long file back in with cellID attached
+        lat_long = pd.read_csv(r'../temp_lat_long.csv')        
+        
+        dat = dat.merge(lat_long)
+        
+        dat_gp = dat.groupby(['cell', 'REP'])
         dat_agg = dat_gp.agg({"YEAR": "count",
                               "EFFORT_HRS": "sum",
                               "EFFORT_DISTANCE_KM": "sum",
                               "EFFORT_AREA_HA": "sum",
                               "NUMBER_OBSERVERS": "sum",
-                              "Empidonax_virescens": "sum"}),
+                              "Empidonax_virescens": "sum",
                               "Setophaga_ruticilla": "max",
                               "Mniotilta_varia": "max",
                               "Cyanocitta_cristata": "max",
@@ -88,9 +101,7 @@ f = files[5]
                               "Hylocichla_mustelina": "max",
                               "Coccyzus_americanus": "max",
                               "Vireo_flavifrons": "max",
-                              "Dendroica_dominica": "max"
-       
+                              "Dendroica_dominica": "max"})
         
-
-
+        dat_agg.to_csv(r'../' + f + '_eBird.csv', index = None)
         
