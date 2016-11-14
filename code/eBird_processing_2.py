@@ -59,7 +59,7 @@ for f in files:
                               "EFFORT_DISTANCE_KM": "sum",
                               "EFFORT_AREA_HA": "sum",
                               "NUMBER_OBSERVERS": "sum",
-                              "Empidonax_virescens": "sum",
+                              "Empidonax_virescens": "max",
                               "Setophaga_ruticilla": "max",
                               "Mniotilta_varia": "max",
                               "Cyanocitta_cristata": "max",
@@ -101,7 +101,15 @@ for f in files:
                               "Hylocichla_mustelina": "max",
                               "Coccyzus_americanus": "max",
                               "Vireo_flavifrons": "max",
-                              "Dendroica_dominica": "max"})
+                              "Dendroica_dominica": "max"}).reset_index()
+        
+        dat_agg.rename(columns={'YEAR': 'n_list'}, inplace=True)
+        dat_agg.YEAR = f
+        
+        dat_agg_sml = dat_agg[['REP', 'cell']].groupby(['cell']).size().reset_index()
+        dat_agg_sml.columns = ['cell', 'REP']
+        dat_locations = dat_agg_sml.query('REP > 2').cell
+        dat_out = dat_agg[dat_agg.cell.isin(dat_locations)]
         
         dat_agg.to_csv(r'../' + f + '_eBird.csv', index = None)
         
