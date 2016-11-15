@@ -69,8 +69,7 @@ model {
   tau.pbeta1 ~ dt(0,1,1)T(0,)
   tau.pbeta2 ~ dt(0,1,1)T(0,)
   tau.pbeta3 ~ dt(0,1,1)T(0,)
-  
-  mu.palpha
+
   # Ecological state submodel ----
   for (i in 1:nspecies){
     for (j in 1:nsite){
@@ -94,7 +93,7 @@ model {
     for (k in 1:nvisit){
       logit(p[i,k]) <- alphap[k] + pbeta1[i]*nlist[k] + pbeta2[i]*effort_hrs[k] + pbeta3[i]*num_obs[k]
       muy[i,k] <- z[i,site[k],year[k]]*p[i,k]
-      y[i,k] ~ dbern(muy[i,k])
+      y[k,i] ~ dbern(muy[i,k])
     }
   }
 
