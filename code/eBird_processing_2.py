@@ -8,7 +8,7 @@ Created on Thu Oct 20 14:29:56 2016
 import pandas as pd
 import numpy as np
 import os
-from rpy2.robjects import pandas2ri, r
+from rpy2.robjects import r
 
 os.chdir(r'HUMMINGBIRDS\eBird_trends\data\ebird_us48_data_grouped_by_year_v2014')
 files = next(os.walk('.'))[1]
@@ -104,12 +104,13 @@ for f in files:
                               "Dendroica_dominica": "max"}).reset_index()
         
         dat_agg.rename(columns={'YEAR': 'n_list'}, inplace=True)
-        dat_agg.YEAR = f
+        dat_agg['YEAR'] = np.repeat(f, dat_agg.shape[0])
         
+        # get rid of sites with < 3 replicates
         dat_agg_sml = dat_agg[['REP', 'cell']].groupby(['cell']).size().reset_index()
         dat_agg_sml.columns = ['cell', 'REP']
         dat_locations = dat_agg_sml.query('REP > 2').cell
         dat_out = dat_agg[dat_agg.cell.isin(dat_locations)]
         
-        dat_agg.to_csv(r'../' + f + '_eBird.csv', index = None)
+        dat_out.to_csv(r'../' + f + '_eBird.csv', index = None)
         
