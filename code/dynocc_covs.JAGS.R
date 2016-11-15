@@ -53,12 +53,24 @@ model {
   # Observation priors ----
   # Currently modelled as fixed effects
   for (i in 1:nspecies){
-    palpha[i] ~ dnorm(0, 0.01)
-    pbeta1[i] ~ dnorm(0, 0.01) # n_list
-    pbeta2[i] ~ dnorm(0, 0.01) # EFFORT_HRS
-    pbeta3[i] ~ dnorm(0, 0.01) # NUMBER_OBSERVERS
+    palpha[i] ~ dnorm(mu.palpha, tau.palpha)
+    pbeta1[i] ~ dnorm(mu.pbeta1, tau.pbeta1) # n_list
+    pbeta2[i] ~ dnorm(mu.pbeta2, tau.pbeta2) # EFFORT_HRS
+    pbeta3[i] ~ dnorm(mu.pbeta3, tau.pbeta3) # NUMBER_OBSERVERS
   }
   
+  # Observation hyperpriors
+  mu.palpha ~ dnorm(0, 0.01)
+  mu.pbeta1 ~ dnorm(0, 0.01)
+  mu.pbeta2 ~ dnorm(0, 0.01)
+  mu.pbeta3 ~ dnorm(0, 0.01)
+  
+  tau.palpha ~ dt(0,1,1)T(0,)
+  tau.pbeta1 ~ dt(0,1,1)T(0,)
+  tau.pbeta2 ~ dt(0,1,1)T(0,)
+  tau.pbeta3 ~ dt(0,1,1)T(0,)
+  
+  mu.palpha
   # Ecological state submodel ----
   for (i in 1:nspecies){
     for (j in 1:nsite){
