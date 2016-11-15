@@ -22,8 +22,4 @@ temp_raster_res <- resample(temp_raster_extent, nlcd, method='bilinear')
 covariate_dat <- stack(lc_perc_2011[[-c(1,5)]], temp_raster_res)
 writeRaster(covariate_dat, filename="data/prism/covariate_dat.tif", options="INTERLEAVE=BAND", overwrite=TRUE)
 
-test <- stack("data/prism/covariate_dat.tif")
-
-names(test) <- c("perc_forest", "perc_agri", "perc_urban", ls_prism_data()[,1])
-
 

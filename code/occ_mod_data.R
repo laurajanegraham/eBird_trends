@@ -7,6 +7,9 @@ library(raster)
 library(readr)
 library(dplyr)
 library(tidyr)
+library(prism)
+
+options(prism.path = "data/prism")
 
 # 1. eBird observation and obs covariate data ----
 files <- list.files("data", pattern="_eBird.csv", full.names = TRUE)
@@ -32,16 +35,28 @@ ef_birds <- read_csv("eastern_forest_birds.csv")
 # fix the order of the dataframe
 eBird_dat_nonspecies <- select(eBird_dat, cell, YEAR, n_list, EFFORT_HRS, EFFORT_DISTANCE_KM, EFFORT_AREA_HA, NUMBER_OBSERVERS)
 eBird_dat_species <- eBird_dat[,gsub(" ", "_", ef_birds$scientific_name)] %>% apply(., 2, function(x) as.numeric(x))
-eBird_dat <- data.frame(eBird_dat_nonspecies, eBird_dat_species)
+eBird_dat_species <- data.frame(cell=eBird_dat_nonspecies$cell, eBird_dat_species)
 
 # remove locations where none of the study species have been observed
-eBird_dat <- eBird_dat[which(rowSums(eBird_dat_species) > 0),]
+eBird_dat_no_obs <- group_by(eBird_dat_species, cell) %>%
+  summarise_each(funs(max))
+
+no_obs <- rowSums(eBird_dat_no_obs[-1])
+eBird_dat_obs <- eBird_dat_no_obs[which(no_obs > 0),]
+
+eBird_dat_species <- eBird_dat_species[,names(which(colSums(eBird_dat_no_obs[-1]) != 0))]
+
+eBird_dat_out <- data.frame(eBird_dat_nonspecies, eBird_dat_species) %>% filter(cell %in% eBird_dat_no_obs$cell)
+
+eBird_dat_out <- filter(eBird_dat_out, cell %in% eBird_dat_obs$cell)
 
 # 3. Environmental covariate data ----
-
+cov_data <- stack("data/prism/covariate_dat.tif")
+names(cov_data) <- c("perc_forest", "perc_agri", "perc_urban", ls_prism_data()[,1])
+cov_data_df <- as.data.frame(cov_data) %>% mutate(cell = row.names(.))
 
 # 4. Bundle together data ----
-
+eBird_dat_covs <- merge(eBird_dat, cov_data_df)
 # 5. Run occupancy model ----
 
 
