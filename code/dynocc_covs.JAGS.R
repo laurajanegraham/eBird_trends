@@ -1,57 +1,93 @@
 model {
-  
-  # Specify priors
-  
-  # ecological priors
-  for (k in 1:nspecies){
-    psi1[k] ~ dunif(0, 1)
-    for(i in 1:(nyear-1)){
-      phi[i,k] ~ dunif(0, 1)
-      gamma[i,k] ~ dunif(0, 1)
-    }
+
+  # Ecological state priors ----
+  for (i in 1:nspecies){
+    # initial occupancy - fixed effect
+    psi1[i] ~ dunif(0, 1)
+    
+    # persistence - random effect
+    phialpha[i] ~ dnorm(mu.phialpha, tau.phialpha) # intercept
+    phibeta1[i] ~ dnorm(mu.phibeta1, tau.phibeta1) # forest %
+    phibeta2[i] ~ dnorm(mu.phibeta2, tau.phibeta1) # agri %
+    phibeta3[i] ~ dnorm(mu.phibeta3, tau.phibeta1) # urban %
+    phibeta4[i] ~ dnorm(mu.phibeta4, tau.phibeta1) # ppt
+    phibeta5[i] ~ dnorm(mu.phibeta5, tau.phibeta1) # temp
+    
+    gammaalpha[i] ~ dnorm(mu.gammaalpha, tau.gammaalpha) # intercept
+    gammabeta1[i] ~ dnorm(mu.gammabeta1, tau.gammabeta1) # forest %
+    gammabeta2[i] ~ dnorm(mu.gammabeta2, tau.gammabeta2) # agri %
+    gammabeta3[i] ~ dnorm(mu.gammabeta3, tau.gammabeta3) # urban %
+    gammabeta4[i] ~ dnorm(mu.gammabeta4, tau.gammabeta4) # ppt
+    gammabeta5[i] ~ dnorm(mu.gammabeta5, tau.gammabeta5) # temp 
   }
   
-  # observation coefficient priors
-  for (k in 1:nspecies){
-    alphap[k] ~ dnorm(0, 0.01)
-    for (np in 1:nparam){
-      betap[np, k] ~ dnorm(0, 0.01)
-      wp[np, k] ~ dbern(0.5)
-    }
+  # Ecological state hyperpriors ----
+  mu.phialpha ~ dnorm(0, 0.01)
+  mu.phibeta1 ~ dnorm(0, 0.01)
+  mu.phibeta2 ~ dnorm(0, 0.01)
+  mu.phibeta3 ~ dnorm(0, 0.01)
+  mu.phibeta4 ~ dnorm(0, 0.01)
+  mu.phibeta5 ~ dnorm(0, 0.01)
+  
+  mu.gammaalpha ~ dnorm(0, 0.01)
+  mu.gammabeta1 ~ dnorm(0, 0.01)
+  mu.gammabeta2 ~ dnorm(0, 0.01)
+  mu.gammabeta3 ~ dnorm(0, 0.01)
+  mu.gammabeta4 ~ dnorm(0, 0.01)
+  mu.gammabeta5 ~ dnorm(0, 0.01)
+  
+  tau.phialpha ~ dt(0,1,1)T(0,)
+  tau.phibeta1 ~ dt(0,1,1)T(0,)
+  tau.phibeta2 ~ dt(0,1,1)T(0,)
+  tau.phibeta3 ~ dt(0,1,1)T(0,)
+  tau.phibeta4 ~ dt(0,1,1)T(0,)
+  tau.phibeta5 ~ dt(0,1,1)T(0,)
+  
+  tau.gammaalpha ~ dt(0,1,1)T(0,)
+  tau.gammabeta1 ~ dt(0,1,1)T(0,)
+  tau.gammabeta2 ~ dt(0,1,1)T(0,)
+  tau.gammabeta3 ~ dt(0,1,1)T(0,)
+  tau.gammabeta4 ~ dt(0,1,1)T(0,)
+  tau.gammabeta5 ~ dt(0,1,1)T(0,)
+  
+  # Observation priors ----
+  # Currently modelled as fixed effects
+  for (i in 1:nspecies){
+    palpha[i] ~ dnorm(0, 0.01)
+    pbeta1[i] ~ dnorm(0, 0.01) # n_list
+    pbeta2[i] ~ dnorm(0, 0.01) # EFFORT_HRS
+    pbeta3[i] ~ dnorm(0, 0.01) # NUMBER_OBSERVERS
   }
   
-  # ecological submodel: Define state conditional on parameters
-  for (j in 1:nsite){
-    for (k in 1:nspecies){
+  # Ecological state submodel ----
+  for (i in 1:nspecies){
+    for (j in 1:nsite){
       z[1,j,k] ~ dbern(psi1[k])
-      for (i in 2:nyear){
-        muZ[i,j,k]<- z[i-1,j,k]*phi[i-1,k] + (1-z[i-1,j,k])*gamma[i-1,k]
-        z[i,j,k] ~ dbern(muZ[i,j,k])
+      for (t in 2:nyear){
+        # Persistence and colonisation for species i at site j in year t are functions of the covariates in year t-1 and t respectively (NB the landcover covariates are static in time)
+        logit(phi[i,j,t]) <- phialpha[i] + phibeta1[i] * forest[j] + phibeta2[i] * agri[j] + phibeta3[i] * urban[j] + phibeta4[i] * ppt[j, t-1] + phibeta5[i] * temp[j, t-1]
+        logit(gamma[i,j,t]) <- gammaalpha[i] + gammabeta1[i] * forest[j] + gammabeta2[i] * agri[j] + gammabeta3[i] * urban[j] + gammabeta4[i] * ppt[j, t] + gammabeta5[i] * temp[j, t]
+        
+        # Dynamic occupancy = previous occupancy modified by persistence and colonisation
+        muZ[i,j,t]<- z[i,j,t-1]*phi[i,j,t] + (1-z[i,j,t-1])*gamma[i,j,t]
+        
+        # True occupancy z for species i in site j in year t
+        z[i,j,t] ~ dbern(muZ[i,j,t])
       } #l
     } #k
   } #i
   
-  # observation model
-  for (i in 1:nyear){
-    for (j in 1:nsite){
-      for (k in 1:nspecies){
-        for (l in 1:nrep){
-          logit(p[i,j,k,l]) <- alphap[k] + 
-            wp[1,k]*betap[1,k]*effort_hrs[i,j,l] + 
-            wp[2,k]*betap[2,k]*day[l] +
-            wp[3,k]*betap[3,k]*time[i,j,l] +
-            wp[4,k]*betap[4,k]*year[i] + 
-            wp[5,k]*betap[5,k]*pop00_sqmi[i] +
-            wp[6,k]*betap[6,k]*housing_density[i] +
-            wp[7,k]*betap[7,k]*number_observers[i,j,l]
-          muy[i,j,k,l] <- z[i,j,k]*p[i,j,k,l]
-          y[i,j,k,l] ~ dbern(muy[i,j,k,l])
-        }#l
-      } #k
-    } #j
-  } #i
-  
-  # Derived parameters: Sample and population occupancy, growth rate and turnover
+  # Observation submodel ----
+  for (i in 1:nspecies){
+    for (k in 1:nvisit){
+      logit(p[i,k]) <- alphap[k] + pbeta1[i]*nlist[k] + pbeta2[i]*effort_hrs[k] + pbeta3[i]*num_obs[k]
+      muy[i,k] <- z[i,site[k],year[k]]*p[i,k]
+      y[i,k] ~ dbern(muy[i,k])
+    }
+  }
+
+  # Derived parameters ----
+  # Sample and population occupancy, growth rate and turnover
   for (k in 1:nspecies){
     psi[1,k] <- psi1[k]
     n.occ[1,k]<-sum(z[1,1:nsite,k])
