@@ -72,18 +72,17 @@ nyear <- length(unique(eBird_dat_out$YEAR))
 
 # site to visit/year lookup
 site <- eBird_dat_out$cell
-year <- eBird_dat_out$YEAR
+year <- eBird_dat_out$YEAR - 2005
 
 # state covariates
 forest <- scale(cov_data_df$perc_forest)
 agri <- scale(cov_data_df$perc_agri)
 urban <- scale(cov_data_df$perc_urban)
 temp <- cov_data_df[,grepl("tmean", names(cov_data_df))]
-temp <- temp[3:8]
-temp <- apply(temp, 2, scale)
+temp <- scale(temp[3:8])
 ppt <- cov_data_df[,grepl("ppt", names(cov_data_df))]
-ppt <- ppt[3:8]
-ppt <- apply(ppt, 2, scale)
+ppt <- scale(ppt[3:8])
+
 
 # observation covariates
 n_list <- eBird_dat_out$n_list
@@ -92,7 +91,7 @@ num_obs <- eBird_dat_out$NUMBER_OBSERVERS
 
 # jags data
 model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nyear, site=site, year=year, forest=forest, agri=agri, urban=urban, temp=temp, ppt=ppt, n_list=n_list, effort_hrs=effort_hrs, num_obs=num_obs)
-
+save(model_data, file="model_data_2016_11_16.rda")
 
 # 5. Run occupancy model ----
 # set initial values
@@ -110,7 +109,7 @@ zst <- array(data = rbinom(model_data$nspecies*model_data$nsite*model_data$nyear
 # }
 # 
 # model_data$zst = zst
-# save(model_data, file="model_data_2016_11_16.rda")
+
 
 inits <- function(){ list(z = zst)}
 
