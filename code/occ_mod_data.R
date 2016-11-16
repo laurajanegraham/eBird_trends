@@ -80,8 +80,10 @@ agri <- scale(cov_data_df$perc_agri)
 urban <- scale(cov_data_df$perc_urban)
 temp <- cov_data_df[,grepl("tmean", names(cov_data_df))]
 temp <- temp[3:8]
+temp <- apply(temp, 2, scale)
 ppt <- cov_data_df[,grepl("ppt", names(cov_data_df))]
 ppt <- ppt[3:8]
+ppt <- apply(ppt, 2, scale)
 
 # observation covariates
 n_list <- eBird_dat_out$n_list
@@ -94,7 +96,7 @@ model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nye
 
 # 5. Run occupancy model ----
 # set initial values
-zst <- array(data = rbinom(nspecies*nsite*nyear, 1, 0.5), dim=c(nspecies, nsite, nyear))
+zst <- array(data = rbinom(model_data$nspecies*model_data$nsite*model_data$nyear, 1, 0.5), dim=c(model_data$nspecies, model_data$nsite, model_data$nyear))
 
 # z <- group_by(eBird_dat_out[-(3:7)], cell, YEAR) %>% summarise_each(funs(max))
 # zst <- array(data=rnorm(1,0,1), dim=c(nspecies, nsite, nyear))
@@ -117,4 +119,4 @@ params <- c("mu.phibeta1", "mu.phibeta2", "mu.phibeta3", "mu.phibeta4", "mu.phib
             "tau.phibeta1", "tau.phibeta2", "tau.phibeta3", "tau.phibeta4", "tau.phibeta5", "tau.gammabeta1", "tau.gammabeta2", "tau.gammabeta3", "tau.gammabeta4", "tau.gammabeta5",
             "mu.pbeta1", "mu.pbeta2", "mu.pbeta3", "tau.pbeta1", "tau.pbeta2", "tau.pbeta3", "phi", "gamma", "p")
 
-out <- jags(data = model_data, inits = inits, parameters.to.save = params, model.file="code/dynocc_covs.JAGS.R", n.chains=3, n.adapt=100, n.iter=1000, n.burnin=500, n.thin=2, parallel = TRUE)
+out <- jags(data = model_data, inits = inits, parameters.to.save = params, model.file="code/dynocc_covs.JAGS.R", n.chains=3, n.adapt=100, n.iter=1000, n.burnin=500, n.thin=2)
