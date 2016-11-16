@@ -90,20 +90,25 @@ num_obs <- eBird_dat_out$NUMBER_OBSERVERS
 
 # jags data
 model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nyear, site=site, year=year, forest=forest, agri=agri, urban=urban, temp=temp, ppt=ppt, n_list=n_list, effort_hrs=effort_hrs, num_obs=num_obs)
-save(model_data, file="model_data_2016_11_16")
+
 
 # 5. Run occupancy model ----
 # set initial values
-z <- group_by(eBird_dat_out[-(3:7)], cell, YEAR) %>% summarise_each(funs(max))
-zst <- array(data=NA, dim=c(nspecies, nsite, nyear))
-for(i in 1:nspecies){
-  for(j in 1:nsite) {
-    for(t in nyear) { # NB will need to change if years change
-      val <- filter(z, cell==j, YEAR==year[t])
-      zst[i,j,t] <- ifelse(nrow(val)==0, NA, val[i+2])
-    }
-  }
-}
+zst <- array(data = rbinom(nspecies*nsite*nyear, 1, 0.5), dim=c(nspecies, nsite, nyear))
+
+# z <- group_by(eBird_dat_out[-(3:7)], cell, YEAR) %>% summarise_each(funs(max))
+# zst <- array(data=rnorm(1,0,1), dim=c(nspecies, nsite, nyear))
+# for(i in 1:nspecies){
+#   for(j in 1:nsite) {
+#     for(t in nyear) { # NB will need to change if years change
+#       val <- filter(z, cell==j, YEAR==year[t])
+#       zst[i,j,t] <- ifelse(nrow(val)==0, NA, val[i+2])
+#     }
+#   }
+# }
+# 
+# model_data$zst = zst
+# save(model_data, file="model_data_2016_11_16.rda")
 
 inits <- function(){ list(z = zst)}
 
