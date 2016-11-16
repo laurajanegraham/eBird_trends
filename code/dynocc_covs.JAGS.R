@@ -73,7 +73,7 @@ model {
   # Ecological state submodel ----
   for (i in 1:nspecies){
     for (j in 1:nsite){
-      z[1,j,k] ~ dbern(psi1[k])
+      z[i,j,1] ~ dbern(psi1[i])
       for (t in 2:nyear){
         # Persistence and colonisation for species i at site j in year t are functions of the covariates in year t-1 and t respectively (NB the landcover covariates are static in time)
         logit(phi[i,j,t]) <- phialpha[i] + phibeta1[i] * forest[j] + phibeta2[i] * agri[j] + phibeta3[i] * urban[j] + phibeta4[i] * ppt[j, t-1] + phibeta5[i] * temp[j, t-1]
@@ -91,31 +91,31 @@ model {
   # Observation submodel ----
   for (i in 1:nspecies){
     for (k in 1:nvisit){
-      logit(p[i,k]) <- alphap[k] + pbeta1[i]*nlist[k] + pbeta2[i]*effort_hrs[k] + pbeta3[i]*num_obs[k]
+      logit(p[i,k]) <- alphap[k] + pbeta1[i]*n_list[k] + pbeta2[i]*effort_hrs[k] + pbeta3[i]*num_obs[k]
       muy[i,k] <- z[i,site[k],year[k]]*p[i,k]
       y[k,i] ~ dbern(muy[i,k])
     }
   }
 
-  # Derived parameters ----
+  # Derived parameters ---- this section needs sorting
   # Sample and population occupancy, growth rate and turnover
-  for (k in 1:nspecies){
-    psi[1,k] <- psi1[k]
-    n.occ[1,k]<-sum(z[1,1:nsite,k])
-    for (j in 1:nsite){
-       meanp[1,j,k] <- sum(p[1,j,k,1:nrep])/nrep
-    }
-    mean_p[1,k] <- sum(meanp[1,1:nrep,k])/nsite
-    for (i in 2:nyear){
-      psi[i,k] <- psi[i-1,k]*phi[i-1,k] + (1-psi[i-1,k])*gamma[i-1,k]
-      n.occ[i,k] <- sum(z[i,1:nsite,k])
-      growthr[i-1,k] <- psi[i,k]/psi[i-1,k]
-      turnover[i-1,k] <- (1 - psi[i-1,k]) * gamma[i-1,k]/psi[i,k]
-      for (j in 1:nsite){
-         meanp[i,j,k] <- sum(p[i,j,k,1:nrep])/nrep
-       }
-      mean_p[i,k] <- sum(meanp[i,1:nrep,k])/nsite
-    }
-  }
+  # for (k in 1:nspecies){
+  #   psi[1,k] <- psi1[k]
+  #   n.occ[1,k]<-sum(z[1,1:nsite,k])
+  #   for (j in 1:nsite){
+  #      meanp[1,j,k] <- sum(p[1,j,k,1:nrep])/nrep
+  #   }
+  #   mean_p[1,k] <- sum(meanp[1,1:nrep,k])/nsite
+  #   for (i in 2:nyear){
+  #     psi[i,k] <- psi[i-1,k]*phi[i-1,k] + (1-psi[i-1,k])*gamma[i-1,k]
+  #     n.occ[i,k] <- sum(z[i,1:nsite,k])
+  #     growthr[i-1,k] <- psi[i,k]/psi[i-1,k]
+  #     turnover[i-1,k] <- (1 - psi[i-1,k]) * gamma[i-1,k]/psi[i,k]
+  #     for (j in 1:nsite){
+  #        meanp[i,j,k] <- sum(p[i,j,k,1:nrep])/nrep
+  #      }
+  #     mean_p[i,k] <- sum(meanp[i,1:nrep,k])/nsite
+  #   }
+  # }
 }
 
