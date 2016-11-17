@@ -72,6 +72,9 @@ nyear <- length(unique(eBird_dat_out$YEAR))
 
 # site to visit/year lookup
 site <- eBird_dat_out$cell
+site_lookup <- data.frame(cell = unique(site), site = 1:length(unique(site)))
+site <- merge(data.frame(cell=site), site_lookup)
+site <- site$site
 year <- eBird_dat_out$YEAR - 2005
 
 # state covariates
@@ -91,7 +94,9 @@ num_obs <- eBird_dat_out$NUMBER_OBSERVERS
 
 # jags data
 model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nyear, site=site, year=year, forest=forest, agri=agri, urban=urban, temp=temp, ppt=ppt, n_list=n_list, effort_hrs=effort_hrs, num_obs=num_obs)
-save(model_data, file="model_data_2016_11_16.rda")
+save(model_data, file="data/model_data_2016_11_16.rda")
+
+load("data/model_data_2016_11_16.rda")
 
 # 5. Run occupancy model ----
 # set initial values
