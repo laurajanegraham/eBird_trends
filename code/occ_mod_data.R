@@ -58,7 +58,16 @@ eBird_dat_out <- filter(eBird_dat_out, YEAR %in% 2006:2011)
 # 3. Environmental covariate data ----
 cov_data <- stack("data/prism/covariate_dat.tif")
 names(cov_data) <- c("perc_forest", "perc_agri", "perc_urban", ls_prism_data()[,1])
+
+# get BCR
+bcr <- readOGR("data/BCR/", "BCR")
+bcr <- spTransform(bcr, cov_data@crs)
+bcr_28 <- subset(bcr, BCRNumber %in% c(28, 29)) # currently working on these two because need to shrink the data for a reasonable length run (not whole US-48) and by selecting these it gives a reasonable range of the land cover variables, not as correlated as it would be with just 28 as originally planned. 
+
+# crop cov_data
+cov_data <- mask(cov_data, bcr_28)
 cov_data_df <- as.data.frame(cov_data) %>% mutate(cell = row.names(.))
+cov_data_df <- cov_data_df[which(complete.cases(cov_data_df)),]
 
 # 4. Bundle together data ----
 # observations data
