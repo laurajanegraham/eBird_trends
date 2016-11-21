@@ -69,7 +69,11 @@ cov_data <- mask(cov_data, bcr_28)
 cov_data_df <- as.data.frame(cov_data) %>% mutate(cell = row.names(.))
 cov_data_df <- cov_data_df[which(complete.cases(cov_data_df)),]
 
+
 # 4. Bundle together data ----
+# filter eBird_dat_out to include only cites within the selected BCRs
+eBird_dat_out <- filter(eBird_dat_out, cell %in% cov_data_df$cell)
+
 # observations data
 y <- eBird_dat_out[,8:44]
 
@@ -103,9 +107,9 @@ num_obs <- eBird_dat_out$NUMBER_OBSERVERS
 
 # jags data
 model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nyear, site=site, year=year, forest=forest, agri=agri, urban=urban, temp=temp, ppt=ppt, n_list=n_list, effort_hrs=effort_hrs, num_obs=num_obs)
-save(model_data, file="data/model_data_2016_11_16.rda")
+save(model_data, file="data/model_data_2016_11_21.rda")
 
-load("data/model_data_2016_11_16.rda")
+load("data/model_data_2016_11_21.rda")
 
 # 5. Run occupancy model ----
 # set initial values
