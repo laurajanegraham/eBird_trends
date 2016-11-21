@@ -81,6 +81,9 @@ nyear <- length(unique(eBird_dat_out$YEAR))
 
 # site to visit/year lookup
 site <- eBird_dat_out$cell
+site_lookup <- data.frame(cell = unique(site), site = 1:length(unique(site)))
+site <- merge(data.frame(cell=site), site_lookup)
+site <- site$site
 year <- eBird_dat_out$YEAR - 2005
 
 # state covariates
@@ -100,7 +103,9 @@ num_obs <- eBird_dat_out$NUMBER_OBSERVERS
 
 # jags data
 model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nyear, site=site, year=year, forest=forest, agri=agri, urban=urban, temp=temp, ppt=ppt, n_list=n_list, effort_hrs=effort_hrs, num_obs=num_obs)
-save(model_data, file="model_data_2016_11_16.rda")
+save(model_data, file="data/model_data_2016_11_16.rda")
+
+load("data/model_data_2016_11_16.rda")
 
 # 5. Run occupancy model ----
 # set initial values
@@ -127,4 +132,4 @@ params <- c("mu.phibeta1", "mu.phibeta2", "mu.phibeta3", "mu.phibeta4", "mu.phib
             "tau.phibeta1", "tau.phibeta2", "tau.phibeta3", "tau.phibeta4", "tau.phibeta5", "tau.gammabeta1", "tau.gammabeta2", "tau.gammabeta3", "tau.gammabeta4", "tau.gammabeta5",
             "mu.pbeta1", "mu.pbeta2", "mu.pbeta3", "tau.pbeta1", "tau.pbeta2", "tau.pbeta3", "phi", "gamma", "p")
 
-out <- jags(data = model_data, inits = inits, parameters.to.save = params, model.file="code/dynocc_covs.JAGS.R", n.chains=3, n.adapt=100, n.iter=1000, n.burnin=500, n.thin=2)
+system.time(out <- jags(data = model_data, inits = inits, parameters.to.save = params, model.file="code/dynocc_covs.JAGS.R", n.chains=3, n.adapt=100, n.iter=1000, n.burnin=500, n.thin=2, parallel = TRUE))
