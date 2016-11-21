@@ -123,4 +123,4 @@ params <- c("mu.phibeta1", "mu.phibeta2", "mu.phibeta3", "mu.phibeta4", "mu.phib
             "tau.phibeta1", "tau.phibeta2", "tau.phibeta3", "tau.phibeta4", "tau.phibeta5", "tau.gammabeta1", "tau.gammabeta2", "tau.gammabeta3", "tau.gammabeta4", "tau.gammabeta5",
             "mu.pbeta1", "mu.pbeta2", "mu.pbeta3", "tau.pbeta1", "tau.pbeta2", "tau.pbeta3", "phi", "gamma", "p")
 
-out <- jags(data = model_data, inits = inits, parameters.to.save = params, model.file="code/dynocc_covs.JAGS.R", n.chains=3, n.adapt=100, n.iter=1000, n.burnin=500, n.thin=2)
+system.time(out <- jags(data = model_data, inits = inits, parameters.to.save = params, model.file="code/dynocc_covs.JAGS.R", n.chains=3, n.adapt=100, n.iter=1000, n.burnin=500, n.thin=2, parallel = TRUE))
