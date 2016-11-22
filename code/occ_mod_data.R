@@ -10,6 +10,7 @@ library(tidyr)
 library(prism)
 library(jagsUI)
 library(abind)
+library(rgdal)
 
 options(prism.path = "data/prism")
 
@@ -60,7 +61,7 @@ cov_data <- stack("data/prism/covariate_dat.tif")
 names(cov_data) <- c("perc_forest", "perc_agri", "perc_urban", ls_prism_data()[,1])
 
 # get BCR
-bcr <- readOGR("data/BCR/", "BCR")
+bcr <- readOGR("data/BCR", "BCR")
 bcr <- spTransform(bcr, cov_data@crs)
 bcr_28 <- subset(bcr, BCRNumber %in% c(28, 29)) # currently working on these two because need to shrink the data for a reasonable length run (not whole US-48) and by selecting these it gives a reasonable range of the land cover variables, not as correlated as it would be with just 28 as originally planned. 
 
@@ -107,29 +108,27 @@ num_obs <- eBird_dat_out$NUMBER_OBSERVERS
 
 # jags data
 model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nyear, site=site, year=year, forest=forest, agri=agri, urban=urban, temp=temp, ppt=ppt, n_list=n_list, effort_hrs=effort_hrs, num_obs=num_obs)
-save(model_data, file="data/model_data_2016_11_21.rda")
-
-load("data/model_data_2016_11_21.rda")
 
 # 5. Run occupancy model ----
 # set initial values
-zst <- array(data = rbinom(model_data$nspecies*model_data$nsite*model_data$nyear, 1, 0.5), dim=c(model_data$nspecies, model_data$nsite, model_data$nyear))
+z <- group_by(eBird_dat_out[-(3:7)], cell, YEAR) %>% summarise_each(funs(max))
+zst <- array(data=NA, dim=c(nspecies, nsite, nyear))
+for(i in 1:nspecies){
+  for(j in 1:nsite) {
+    for(t in nyear) { # NB will need to change if years change
+      val <- filter(z, cell==j, YEAR==year[t])
+      zst[i,j,t] <- ifelse(nrow(val)==0, NA, val[i+2])
+    }
+  }
+}
 
-# z <- group_by(eBird_dat_out[-(3:7)], cell, YEAR) %>% summarise_each(funs(max))
-# zst <- array(data=rnorm(1,0,1), dim=c(nspecies, nsite, nyear))
-# for(i in 1:nspecies){
-#   for(j in 1:nsite) {
-#     for(t in nyear) { # NB will need to change if years change
-#       val <- filter(z, cell==j, YEAR==year[t])
-#       zst[i,j,t] <- ifelse(nrow(val)==0, NA, val[i+2])
-#     }
-#   }
-# }
-# 
-# model_data$zst = zst
+model_data$zst = zst
 
+# save and reload script because the jags part of the model run on diff computer
+save(model_data, file="data/model_data_2016_11_21.rda")
+load("data/model_data_2016_11_21.rda")
 
-inits <- function(){ list(z = zst)}
+inits <- function(){ list(z = model_data$zst)}
 
 # set parameters to save
 params <- c("mu.phibeta1", "mu.phibeta2", "mu.phibeta3", "mu.phibeta4", "mu.phibeta5", "mu.gammabeta1", "mu.gammabeta2", "mu.gammabeta3", "mu.gammabeta4", "mu.gammabeta5",
