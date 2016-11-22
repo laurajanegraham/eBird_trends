@@ -93,7 +93,7 @@ model {
   # Observation submodel ----
   for (i in 1:nspecies){
     for (k in 1:nvisit){
-      logit(p[i,k]) <- palpha[year[k]] + pbeta1[i]*n_list[k] + pbeta2[i]*effort_hrs[k] + pbeta3[i]*num_obs[k]
+      logit(p[i,k]) <- palpha[year[k]] + pbeta1[i]*n_list[k] + pbeta2[i]*effort_hrs[k]
       muy[i,k] <- z[i,site[k],year[k]]*p[i,k]
       y[k,i] ~ dbern(muy[i,k])
     }
