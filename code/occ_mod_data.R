@@ -122,9 +122,9 @@ z <- group_by(eBird_dat_out[-(3:7)], cell, YEAR) %>% summarise_each(funs(max))
 zst <- array(data=NA, dim=c(nspecies, nsite, nyear))
 for(i in 1:nspecies){
   for(j in 1:nsite) {
-    for(t in nyear) { # NB will need to change if years change
-      val <- filter(z, cell==j, YEAR==year[t])
-      zst[i,j,t] <- ifelse(nrow(val)==0, NA, val[i+2])
+    for(t in 1:nyear) { # NB will need to change if years change
+      val <- filter(z, cell==site_lookup[site_lookup$site==j, 1], YEAR==t+2005)
+      if(nrow(val) != 0) zst[i,j,t] <- as.numeric(val[,i+2])
     }
   }
 }
@@ -132,8 +132,8 @@ for(i in 1:nspecies){
 model_data$zst = zst
 
 # save and reload script because the jags part of the model run on diff computer
-save(model_data, file="data/model_data_2016_11_21.rda")
-load("data/model_data_2016_11_21.rda")
+save(model_data, file="data/model_data_2016_11_23.rda")
+load("data/model_data_2016_11_23.rda")
 
 inits <- function(){ list(z = model_data$zst)}
 
