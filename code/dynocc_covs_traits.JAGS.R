@@ -6,60 +6,63 @@ model {
     psi1[i] ~ dunif(0, 1)
     
     # persistence - random effect
-    phialpha[i] ~ dnorm(mu.phialpha, tau.phialpha) # intercept
-    phibeta1[i] ~ dnorm(mu.phibeta1, tau.phibeta1) # forest %
-    phibeta2[i] ~ dnorm(mu.phibeta2, tau.phibeta1) # agri %
-    phibeta3[i] ~ dnorm(mu.phibeta3, tau.phibeta1) # urban %
-    phibeta4[i] ~ dnorm(mu.phibeta4, tau.phibeta1) # ppt
-    phibeta5[i] ~ dnorm(mu.phibeta5, tau.phibeta1) # temp
+    phialpha[i] ~ dnorm(mu.phialpha[trait[i]], tau.phialpha[trait[i]]) # intercept
+    phibeta1[i] ~ dnorm(mu.phibeta1[trait[i]], tau.phibeta1[trait[i]]) # forest %
+    phibeta2[i] ~ dnorm(mu.phibeta2[trait[i]], tau.phibeta1[trait[i]]) # agri %
+    phibeta3[i] ~ dnorm(mu.phibeta3[trait[i]], tau.phibeta1[trait[i]]) # urban %
+    phibeta4[i] ~ dnorm(mu.phibeta4[trait[i]], tau.phibeta1[trait[i]]) # ppt
+    phibeta5[i] ~ dnorm(mu.phibeta5[trait[i]], tau.phibeta1[trait[i]]) # temp
     
-    gammaalpha[i] ~ dnorm(mu.gammaalpha, tau.gammaalpha) # intercept
-    gammabeta1[i] ~ dnorm(mu.gammabeta1, tau.gammabeta1) # forest %
-    gammabeta2[i] ~ dnorm(mu.gammabeta2, tau.gammabeta2) # agri %
-    gammabeta3[i] ~ dnorm(mu.gammabeta3, tau.gammabeta3) # urban %
-    gammabeta4[i] ~ dnorm(mu.gammabeta4, tau.gammabeta4) # ppt
-    gammabeta5[i] ~ dnorm(mu.gammabeta5, tau.gammabeta5) # temp 
+    gammaalpha[i] ~ dnorm(mu.gammaalpha[trait[i]], tau.gammaalpha[trait[i]]) # intercept
+    gammabeta1[i] ~ dnorm(mu.gammabeta1[trait[i]], tau.gammabeta1[trait[i]]) # forest %
+    gammabeta2[i] ~ dnorm(mu.gammabeta2[trait[i]], tau.gammabeta2[trait[i]]) # agri %
+    gammabeta3[i] ~ dnorm(mu.gammabeta3[trait[i]], tau.gammabeta3[trait[i]]) # urban %
+    gammabeta4[i] ~ dnorm(mu.gammabeta4[trait[i]], tau.gammabeta4[trait[i]]) # ppt
+    gammabeta5[i] ~ dnorm(mu.gammabeta5[trait[i]], tau.gammabeta5[trait[i]]) # temp 
   }
   
   # Ecological state hyperpriors ----
   mu.phialpha ~ dnorm(0, 0.01)
-  phibeta1.mean ~ dnorm(0, 0.01)
-  phibeta2.mean ~ dnorm(0, 0.01)
-  phibeta3.mean ~ dnorm(0, 0.01)
-  phibeta4.mean ~ dnorm(0, 0.01)
-  phibeta5.mean ~ dnorm(0, 0.01) 
-  mu.phibeta1 <- logit(phibeta1.mean)
-  mu.phibeta2 <- logit(phibeta2.mean)
-  mu.phibeta3 <- logit(phibeta3.mean)
-  mu.phibeta4 <- logit(phibeta4.mean)
-  mu.phibeta5 <- logit(phibeta5.mean)
-  
   mu.gammaalpha ~ dnorm(0, 0.01)
-  gammabeta1.mean ~ dnorm(0, 0.01)
-  gammabeta2.mean ~ dnorm(0, 0.01)
-  gammabeta3.mean ~ dnorm(0, 0.01)
-  gammabeta4.mean ~ dnorm(0, 0.01)
-  gammabeta5.mean ~ dnorm(0, 0.01) 
-  mu.gammabeta1 <- logit(gammabeta1.mean)
-  mu.gammabeta2 <- logit(gammabeta2.mean)
-  mu.gammabeta3 <- logit(gammabeta3.mean)
-  mu.gammabeta4 <- logit(gammabeta4.mean)
-  mu.gammabeta5 <- logit(gammabeta5.mean)
-  
   tau.phialpha ~ dt(0,1,1)T(0,)
-  tau.phibeta1 ~ dt(0,1,1)T(0,)
-  tau.phibeta2 ~ dt(0,1,1)T(0,)
-  tau.phibeta3 ~ dt(0,1,1)T(0,)
-  tau.phibeta4 ~ dt(0,1,1)T(0,)
-  tau.phibeta5 ~ dt(0,1,1)T(0,)
-  
   tau.gammaalpha ~ dt(0,1,1)T(0,)
-  tau.gammabeta1 ~ dt(0,1,1)T(0,)
-  tau.gammabeta2 ~ dt(0,1,1)T(0,)
-  tau.gammabeta3 ~ dt(0,1,1)T(0,)
-  tau.gammabeta4 ~ dt(0,1,1)T(0,)
-  tau.gammabeta5 ~ dt(0,1,1)T(0,)
   
+  for(f in 1:3){ # colonisation and extinction drivers may differ depending on functional group
+    phibeta1.mean[f] ~ dnorm(0, 0.01)
+    phibeta2.mean[f] ~ dnorm(0, 0.01)
+    phibeta3.mean[f] ~ dnorm(0, 0.01)
+    phibeta4.mean[f] ~ dnorm(0, 0.01)
+    phibeta5.mean[f] ~ dnorm(0, 0.01) 
+    mu.phibeta1[f] <- logit(phibeta1.mean[f])
+    mu.phibeta2[f] <- logit(phibeta2.mean[f])
+    mu.phibeta3[f] <- logit(phibeta3.mean[f])
+    mu.phibeta4[f] <- logit(phibeta4.mean[f])
+    mu.phibeta5[f] <- logit(phibeta5.mean[f])
+    
+    gammabeta1.mean[f] ~ dnorm(0, 0.01)
+    gammabeta2.mean[f] ~ dnorm(0, 0.01)
+    gammabeta3.mean[f] ~ dnorm(0, 0.01)
+    gammabeta4.mean[f] ~ dnorm(0, 0.01)
+    gammabeta5.mean[f] ~ dnorm(0, 0.01) 
+    mu.gammabeta1[f] <- logit(gammabeta1.mean[f])
+    mu.gammabeta2[f] <- logit(gammabeta2.mean[f])
+    mu.gammabeta3[f] <- logit(gammabeta3.mean[f])
+    mu.gammabeta4[f] <- logit(gammabeta4.mean[f])
+    mu.gammabeta5[f] <- logit(gammabeta5.mean[f])
+    
+    tau.phibeta1[f] ~ dt(0,1,1)T(0,)
+    tau.phibeta2[f] ~ dt(0,1,1)T(0,)
+    tau.phibeta3[f] ~ dt(0,1,1)T(0,)
+    tau.phibeta4[f] ~ dt(0,1,1)T(0,)
+    tau.phibeta5[f] ~ dt(0,1,1)T(0,)
+    
+    tau.gammabeta1[f] ~ dt(0,1,1)T(0,)
+    tau.gammabeta2[f] ~ dt(0,1,1)T(0,)
+    tau.gammabeta3[f] ~ dt(0,1,1)T(0,)
+    tau.gammabeta4[f] ~ dt(0,1,1)T(0,)
+    tau.gammabeta5[f] ~ dt(0,1,1)T(0,)
+  }
+
   # Observation priors ----
   # Currently modelled as fixed effects
   for (i in 1:nspecies){
