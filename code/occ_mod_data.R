@@ -107,14 +107,7 @@ effort_hrs <- eBird_dat_out$EFFORT_HRS
 num_obs <- eBird_dat_out$NUMBER_OBSERVERS
 
 # jags data
-<<<<<<< HEAD
-model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nyear, site=site, year=year, forest=forest, agri=agri, urban=urban, temp=temp, ppt=ppt, n_list=n_list, effort_hrs=effort_hrs)
-save(model_data, file="data/model_data_2016_11_21.rda")
-
-load("data/model_data_2016_11_21.rda")
-=======
 model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nyear, site=site, year=year, forest=forest, agri=agri, urban=urban, temp=temp, ppt=ppt, n_list=n_list, effort_hrs=effort_hrs, num_obs=num_obs)
->>>>>>> d9c216f8ac2baaec0156a518e39a7de7895da28a
 
 # 5. Run occupancy model ----
 # set initial values
@@ -134,12 +127,24 @@ model_data$zst = zst
 # save and reload script because the jags part of the model run on diff computer
 save(model_data, file="data/model_data_2016_11_23.rda")
 load("data/model_data_2016_11_23.rda")
+ef_birds <- read.csv("eastern_forest_birds.csv", stringsAsFactors = FALSE)
+
+ef_birds <- merge(data.frame(ID = 1:ncol(model_data$y), scientific_name=gsub("_", " ", names(model_data$y))), ef_birds) %>%
+  arrange(ID)
+
+
 
 inits <- function(){ list(z = model_data$zst)}
 
 # set parameters to save
-params <- c("mu.phibeta1", "mu.phibeta2", "mu.phibeta3", "mu.phibeta4", "mu.phibeta5", "mu.gammabeta1", "mu.gammabeta2", "mu.gammabeta3", "mu.gammabeta4", "mu.gammabeta5",
-            "tau.phibeta1", "tau.phibeta2", "tau.phibeta3", "tau.phibeta4", "tau.phibeta5", "tau.gammabeta1", "tau.gammabeta2", "tau.gammabeta3", "tau.gammabeta4", "tau.gammabeta5",
-            "mu.pbeta1", "mu.pbeta2", "tau.pbeta1", "tau.pbeta2", "phi", "gamma", "p")
+params <- c("mu.phibeta1", "mu.phibeta2", "mu.phibeta3", "mu.phibeta4", "mu.phibeta5", "mu.gammabeta1", "mu.gammabeta2", "mu.gammabeta3", "mu.gammabeta4", "mu.gammabeta5")
 
 system.time(out <- jags(data = model_data, inits = inits, parameters.to.save = params, model.file="code/dynocc_covs.JAGS.R", n.chains=3, n.adapt=100, n.iter=1000, n.burnin=500, n.thin=2, parallel = TRUE))
+
+save(out, file="results/jags_out.Rda")
+
+# update the jags model and save every 1000 iterations
+for(rep in 2:100) {
+  out <- update(out, n.iter=1000, parameters.to.save = params, parallel = TRUE)
+  save(out, file="results/jags_out.Rda")
+}
