@@ -75,6 +75,10 @@ cov_data_df <- cov_data_df[which(complete.cases(cov_data_df)),]
 # filter eBird_dat_out to include only cites within the selected BCRs
 eBird_dat_out <- filter(eBird_dat_out, cell %in% cov_data_df$cell)
 
+# site to visit lookup
+site_lookup <- data.frame(cell = unique(eBird_dat_out$cell), site = 1:length(unique(eBird_dat_out$cell)))
+eBird_dat_out <- merge(eBird_dat_out, site_lookup)
+
 # observations data
 y <- eBird_dat_out[,8:44]
 
@@ -84,11 +88,8 @@ nvisit <- dim(y)[1]
 nsite <- length(unique(eBird_dat_out$cell))
 nyear <- length(unique(eBird_dat_out$YEAR))
 
-# site to visit/year lookup
-site <- eBird_dat_out$cell
-site_lookup <- data.frame(cell = unique(site), site = 1:length(unique(site)))
-site <- merge(data.frame(cell=site), site_lookup)
-site <- site$site
+# lookup visit to site / year 
+site <- eBird_dat_out$site
 year <- eBird_dat_out$YEAR - 2005
 
 # state covariates
@@ -111,12 +112,12 @@ model_data <- list(y=y, nspecies=nspecies, nvisit=nvisit, nsite=nsite, nyear=nye
 
 # 5. Run occupancy model ----
 # set initial values
-z <- group_by(eBird_dat_out[-(3:7)], cell, YEAR) %>% summarise_each(funs(max))
+z <- group_by(eBird_dat_out[-c(1,3:7)], site, YEAR) %>% summarise_each(funs(max))
 zst <- array(data=NA, dim=c(nspecies, nsite, nyear))
 for(i in 1:nspecies){
   for(j in 1:nsite) {
     for(t in 1:nyear) { # NB will need to change if years change
-      val <- filter(z, cell==site_lookup[site_lookup$site==j, 1], YEAR==t+2005)
+      val <- filter(z, site==j, YEAR==t+2005)
       if(nrow(val) != 0) zst[i,j,t] <- as.numeric(val[,i+2])
     }
   }
