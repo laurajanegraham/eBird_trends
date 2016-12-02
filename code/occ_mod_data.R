@@ -129,11 +129,12 @@ model_data$zst = zst
 save(model_data, file="data/model_data_2016_11_23.rda")
 load("data/model_data_2016_11_23.rda")
 ef_birds <- read.csv("eastern_forest_birds.csv", stringsAsFactors = FALSE)
-
+mig_lookup <- data.frame(mig_status=unique(ef_birds$mig_status), mig_code=1:3)
+ef_birds <- merge(ef_birds, mig_lookup)
 ef_birds <- merge(data.frame(ID = 1:ncol(model_data$y), scientific_name=gsub("_", " ", names(model_data$y))), ef_birds) %>%
   arrange(ID)
 
-model_data$trait <- ef_birds$mig_status
+model_data$trait <- ef_birds$mig_code
 
 inits <- function(){ list(z = model_data$zst)}
 
