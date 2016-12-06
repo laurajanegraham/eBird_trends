@@ -4,9 +4,7 @@ model {
   for (i in 1:nspecies){
     # initial occupancy - fixed effect
     psi1[i] ~ dunif(0, 1)
-    phi[i] ~ dunif(0, 1)
-    gamma[i] ~ dunif(0, 1)
-    
+
     # RANDOM EFFECTS
     logitphi[i] ~ dnorm(mu.phi, tau.phi) # Persistence probabilities
     logit(phi[i]) <- logitphi[i]
@@ -68,16 +66,16 @@ model {
 
   # Derived parameters ---- this section needs sorting
   # Sample and population occupancy, growth rate and turnover
-   for (k in 1:nspecies){
-     psi[1,k] <- psi1[k]
+   for (i in 1:nspecies){
+     psi[i,1] <- psi1[i]
      
-     n.occ[1,k]<-sum(z[1,1:nsite,k])
+     n.occ[i,1]<-sum(z[i,1:nsite,1])
 
-     for (i in 2:nyear){
-       psi[i,k] <- psi[i-1,k]*phi[k] + (1-psi[i-1,k])*gamma[k]  
-       n.occ[i,k] <- sum(z[i,1:nsite,k])
-       growthr[i-1,k] <- psi[i,k]/psi[i-1,k]
-       turnover[i-1,k] <- (1 - psi[i-1,k]) * gamma[k]/psi[i,k]
+     for (t in 2:nyear){
+       psi[i,t] <- psi[i, t-1]*phi[i] + (1-psi[i, t-1])*gamma[i]  
+       n.occ[i, t] <- sum(z[i,1:nsite,t])
+       growthr[i, t-1] <- psi[i,t]/psi[i, t-1]
+       turnover[i, t-1] <- (1 - psi[i,t-1]) * gamma[i]/psi[i,t]
      }
    }
 }
