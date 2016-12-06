@@ -28,14 +28,12 @@ model {
   tau.gammaalpha ~ dt(0,1,1)T(0,)
   
   for(f in 1:3){ # colonisation and extinction drivers may differ depending on functional group
-    mu.phialpha[f] ~ dnorm(0, 0.01)
     mu.phibeta1[f] ~ dnorm(0, 0.01)
     mu.phibeta2[f] ~ dnorm(0, 0.01)
     mu.phibeta3[f] ~ dnorm(0, 0.01)
     mu.phibeta4[f] ~ dnorm(0, 0.01)
     mu.phibeta5[f] ~ dnorm(0, 0.01) 
     
-    mu.gammaalpha[f] ~ dnorm(0, 0.01)
     mu.gammabeta1[f] ~ dnorm(0, 0.01)
     mu.gammabeta2[f] ~ dnorm(0, 0.01)
     mu.gammabeta3[f] ~ dnorm(0, 0.01)
