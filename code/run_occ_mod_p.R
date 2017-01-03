@@ -10,7 +10,7 @@ params <- c("mu.gamma", "mu.phi", "n.occ", "growthr", "turnover")
 
 system.time(out <- jags(data = model_data, inits = inits, parameters.to.save = params, model.file="code/dynocc_pcovs.JAGS.R", n.chains=3, n.adapt=100, n.iter=1000, n.burnin=500, n.thin=2, parallel = TRUE))
 
-save(out, file="results/jags_out_mig_1.Rda")
+save(out, file="results/jags_out_p_1.Rda")
 
 # update the jags model and save every 1000 iterations
 for(rep in 1:100) {

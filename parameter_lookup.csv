@@ -1,0 +1,11 @@
+parameter,process,covariate
+mu.gammabeta1,Colonisation,Forest (% cover)
+mu.gammabeta2,Colonisation,Agriculture (% cover)
+mu.gammabeta3,Colonisation,Urban (% cover)
+mu.gammabeta4,Colonisation,Precipitation
+mu.gammabeta5,Colonisation,Temperature
+mu.phibeta1,Persistence,Forest (% cover)
+mu.phibeta2,Persistence,Agriculture (% cover)
+mu.phibeta3,Persistence,Urban (% cover)
+mu.phibeta4,Persistence,Precipitation
+mu.phibeta5,Persistence,Temperature
