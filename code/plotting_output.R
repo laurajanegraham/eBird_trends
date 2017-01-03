@@ -19,7 +19,7 @@ sims.array <- as.data.frame(out$sims.list) %>%
   gather(parameter, value, -it, -chain)
 
 gp <- ggplot(data=sims.array, aes(x=it, y=value, col=factor(chain))) +
-  facet_wrap(~variable, scales='free') + geom_line()
+  facet_wrap(~parameter, scales='free') + geom_line()
 
 ggsave(gp, file=paste0('plots/traceplot_',1,'kit.png'),
        he=210, wi=350, units='mm')
