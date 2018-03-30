@@ -1,41 +1,0 @@
-
-
-processing file: occ_mod.Rmd
-  |                                                                         |                                                                 |   0%  |                                                                         |...........                                                      |  17%
-  ordinary text without R code
-
-  |                                                                         |......................                                           |  33%
-label: setup (with options) 
-List of 2
- $ message: logi FALSE
- $ include: logi FALSE
-
-Loading required package: rjags
-Loading required package: coda
-Linked to JAGS 4.2.0
-Loaded modules: basemod,bugs
-
-Attaching package: 'R2jags'
-
-The following object is masked from 'package:coda':
-
-    traceplot
-
-Loading required package: snow
-Loading required package: boot
-  |                                                                         |................................                                 |  50%
-   inline R code fragments
-
-  |                                                                         |...........................................                      |  67%
-label: load_data
-  |                                                                         |......................................................           |  83%
-  ordinary text without R code
-
-  |                                                                         |.................................................................| 100%
-label: basic_model
-
-output file: occ_mod.knit.md
-
-/usr/bin/pandoc +RTS -K512m -RTS occ_mod.utf8.md --to latex --from markdown+autolink_bare_uris+ascii_identifiers+tex_math_single_backslash --output occ_mod.pdf --template /usr/local/lib/R/site-library/rmarkdown/rmd/latex/default-1.15.2.tex --number-sections --highlight-style tango --latex-engine pdflatex --variable graphics=yes --variable 'geometry:margin=1in' 
-
-Output created: occ_mod.pdf

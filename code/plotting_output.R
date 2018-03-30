@@ -10,7 +10,7 @@ library(tidyr)
 library(cowplot)
 
 # Load the latest occupancy model output
-load('results/jags_out_covs_10.Rda') # -> out
+load('results/jags_out_covs_73.Rda') # -> out
 
 # Create the traceplot ----
 sims.array <- as.data.frame(out$sims.list) %>%
